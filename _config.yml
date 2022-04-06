@@ -19,6 +19,7 @@ resume: false
 resume-external: false
 resume-url: https://google.com/?q=my+resume
 
+baseurl: "/blog"
 url: https://stephan-lopes.github.io
 # your url: https://USERNAME.github.io
 
