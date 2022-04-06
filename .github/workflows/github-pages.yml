@@ -6,7 +6,7 @@ on:
         - develop
 
 jobs:
-  github=pages:
+  github-pages:
     runs-on: ubuntu-latest
     steps:
       - uses: action/checkout@v2
