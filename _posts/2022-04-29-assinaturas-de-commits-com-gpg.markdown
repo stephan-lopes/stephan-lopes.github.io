@@ -65,11 +65,11 @@ gpg --full-generate-key
 
 Após a execução do comando, ele irá realizar a geração de uma chave GPG. Selecione o tipo de chave (no tutorial usaremos a **RSA and RSA**), e dê enter.
 
-Feito isso, será perguntado o tamanho da chave em bits. Para uma maior segurança, usaremo o tamanho de **4096 bits**.
+Feito isso, será perguntado o tamanho da chave em bits. Para uma maior segurança, usaremos o tamanho de **4096 bits**.
 
 Será então solicitado que informe o número de dias que a chave deve permanecer viva. Se você não informar nada, a chave ficará viva por 0 dias, ou seja, para sempre. No tutorial, usaremos uma chave com validade de **0 dias**. Nesse caso, quando é definido 0 dias, irá ser questionado se tem realmente certeza que quer criar uma chave com uma validade tão longa. **Confirme e dê enter**.
 
-Por fim, insira o **Nome**, e o **endereço de e-mail** que deseja vincular a chave. O endereço de e-mail, pode ser de dois tipos: 
+Por fim, insira o **nome**, e o **endereço de e-mail** que deseja vincular a chave. O endereço de e-mail, pode ser de dois tipos: 
 - Um endereço de e-mail pessoal, registrado na sua conta do GitHub.
 - Ou, o mais indicado, um endereço de e-mail no-reply, que é gerado pelo GitHub.
 
@@ -173,12 +173,6 @@ Abra uma nova sessão, ou então, execute o comando abaixo no terminal, para que
 source ~/.bashrc
 {% endhighlight %}
 
-Por fim, reinicie o agent, com o seguinte comando:
-    
-{% highlight bash %}
-gpgconf --kill gpg-agent
-{% endhighlight %}
-
 Pronto! A partir de agora, todo o commit que enviar no git, será assinado com a chave que você definiu, de forma automática!
 
 ## >_ Enviando um Commit para o GitHub
@@ -208,6 +202,12 @@ Para realizar essa tarefa, precisamos criar um arquivo chamado **~/.gnupg/gpg-ag
 {% highlight bash %}
 default-cache-ttl 3600
 max-cache-ttl 3600
+{% endhighlight %}
+
+Por fim, reinicie o agent, com o seguinte comando:
+    
+{% highlight bash %}
+gpgconf --kill gpg-agent
 {% endhighlight %}
 
 Dessa forma, ele irá armazenar a passphrase, depois de digitada, por uma hora. Após o prazo, o agent irá pedir a passphrase novamente.
@@ -241,7 +241,7 @@ Para ativar o modo vigilante, no seu perfil, acesse **Settings**, posteriormente
 ## >_ Conclusão
 Neste tutorial/artigo, quis demonstrar um pouco mais sobre o problema de não assinar seus commits, mostrar como assinar commits, e como fazer um rebase para assinar commits antigos, caso opte por isso. Além disso, foi ensinado um pouco sobre geração de chave GPG, como configurar cache das chaves, e uma forma de não expor seu e-mail pessoal, mas sim um gerado pelo Github, para ter maior segurança em seus commits.
 
-Também foi ensinado algumas formas de melhorar a indentificação, utilizando o modo vigilante, e como impedir que seu endereço de e-mail seja exposto sem querer, em algum commit, quando usar o push. Espero que tenha gostado, e que esse artigo tenha sido útil. Caso você tenha ainda mais interesse em me ajudar, curta e compartilhe o artigo, além de interagir com sugestões, dúvidas, e comentários, na seção de comentários abaixo.
+Também foi ensinado algumas formas de melhorar a identificação, utilizando o modo vigilante, e como impedir que seu endereço de e-mail seja exposto sem querer, em algum commit, quando usar o push. Espero que tenha gostado, e que esse artigo tenha sido útil. Caso você tenha ainda mais interesse em me ajudar, curta e compartilhe o artigo, além de interagir com sugestões, dúvidas, e comentários, na seção de comentários abaixo.
 
 <div class="breaker"></div>
 
