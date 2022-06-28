@@ -98,3 +98,5 @@ Assim como o **alias** executado no terminal, ele é apenas definido na sessão 
 
 ## >_ Conclusão
 Neste artigo, o leitor obteve informações de como visualizar, criar, gerenciar, e remover atalhos para comandos existentes no sistema. Esses atalhos são poderosos, podendo agilizar o dia-a-dia de quem trabalha com **linux**, a medida que necessita cada vez mais usar argumentos e _flags_ em determinados comandos. No próximo artigo, o leitor será introduzido a outro comando built-in poderoso: o comando exec.
+
+<div class="breaker"></div>
