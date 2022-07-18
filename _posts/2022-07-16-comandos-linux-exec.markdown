@@ -1,7 +1,7 @@
 ---
 title: "Comandos Linux: Exec"
 layout: post
-date: 2022-06-29 22:00
+date: 2022-07-17 22:00
 tag:
   - linux
   - comandos
