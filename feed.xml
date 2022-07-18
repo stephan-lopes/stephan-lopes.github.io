@@ -1,0 +1,1070 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.2">Jekyll</generator><link href="https://stephan-lopes.github.io/blog/feed.xml" rel="self" type="application/atom+xml" /><link href="https://stephan-lopes.github.io/blog/" rel="alternate" type="text/html" /><updated>2022-07-18T03:00:47+00:00</updated><id>https://stephan-lopes.github.io/blog/feed.xml</id><title type="html">K.</title><subtitle>Um blog sobre tecnologia, programação e computação.</subtitle><entry><title type="html">Comandos Linux: Exec</title><link href="https://stephan-lopes.github.io/blog/comandos-linux-exec/" rel="alternate" type="text/html" title="Comandos Linux: Exec" /><published>2022-07-17T22:00:00+00:00</published><updated>2022-07-17T22:00:00+00:00</updated><id>https://stephan-lopes.github.io/blog/comandos-linux-exec</id><content type="html" xml:base="https://stephan-lopes.github.io/blog/comandos-linux-exec/">&lt;p&gt;&lt;em&gt;No artigo anterior desta série de artigos, o leitor obteve conhecimentos sobre o comando alias. Ele é um dos comandos embutidos no bash. Esses comandos embutidos, também conhecidos como built-in, apesar de parecerem simples, são poderosos, já que possibilitam uma comunicação mais rápida com recursos do sistema. Um desses comandos embutidos, permite com que o usuário utilize descritores de arquivos de uma forma mais prática. O comando exec, permite realizar essa manipulação, além de fazer a sua função principal: executar um novo programa no mesmo processo em que está, sem utilizar uma subshell. Neste artigo, o leitor será introduzido ao comando exec e aos conceitos de sistemas operacionais, exec e fork.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;_-o-comando-exec&quot;&gt;&amp;gt;_ O Comando Exec&lt;/h2&gt;
+&lt;p&gt;O &lt;strong&gt;comando exec&lt;/strong&gt; permite executar um comando sem criar uma &lt;em&gt;subshell&lt;/em&gt;. Com ele, é até mesmo possível redirecionar descritores padrões de arquivos. Ele permite executar comandos com qualquer quantidade de argumentos. Qualquer argumento passado para o &lt;strong&gt;exec&lt;/strong&gt;, será tratado como argumento do comando que está sendo passado. É importante frisar também que, quando não usado com descritores, ele utiliza códigos de retorno para o &lt;em&gt;shell&lt;/em&gt;. Isso faz com que, ao final da execução daquele programa, o processo seja encerrado.&lt;/p&gt;
+
+&lt;p&gt;Um exemplo de como funciona a sua interpretação, seria a seguinte:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;exec&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;comando&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;1...N argumentos &lt;span class=&quot;k&quot;&gt;do &lt;/span&gt;comando&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;O &lt;strong&gt;comando exec&lt;/strong&gt;, segue o mesmo conceito do &lt;strong&gt;exec&lt;/strong&gt; presente em &lt;strong&gt;sistemas operacionais&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;Em &lt;strong&gt;sistemas operacionais&lt;/strong&gt;, um processo pode ser filho de outro, o que é chamado de &lt;strong&gt;fork&lt;/strong&gt; (existem alguns detalhes que serão explicados mais adiante). Já o &lt;strong&gt;exec&lt;/strong&gt;, permite a execução de um processo, sem a criação de um processo filho.&lt;/p&gt;
+
+&lt;p&gt;Se é a primeira vez que o leitor se depara com esses termos, não deve se preocupar. Ao decorrer do artigo, serão dadas mais explicações sobre os termos tratados acima.&lt;/p&gt;
+
+&lt;h2 id=&quot;_-uma-breve-introdução-ao-fork&quot;&gt;&amp;gt;_ Uma breve introdução ao Fork&lt;/h2&gt;
+&lt;p&gt;Anteriormente, foi dito que um processo filho pode ser considerado um &lt;strong&gt;fork&lt;/strong&gt;. Entretanto, um processo filho possuí além de &lt;strong&gt;fork&lt;/strong&gt;, também a função &lt;strong&gt;exec&lt;/strong&gt;, e no caso de &lt;em&gt;subshell&lt;/em&gt;, também possuí outras funções. Lembrando que está sendo falado do &lt;strong&gt;exec de sistemas operacionais&lt;/strong&gt;, e não do &lt;strong&gt;comando exec&lt;/strong&gt; presente no &lt;em&gt;linux&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;O &lt;strong&gt;fork&lt;/strong&gt; tem como finalidade bifurcar, ou seja, criar um processo, e executar em paralelo o restante do código que ainda não foi executado. Existem formas de fazer o processo pai esperar o processo filho terminar sua execução. Na &lt;em&gt;Linguagem de Programação C&lt;/em&gt;, por exemplo, pode ser usado o &lt;em&gt;Wait System Call&lt;/em&gt;. Por padrão, caso o processo pai termine, o processo filho ainda continua sua execução em &lt;em&gt;background&lt;/em&gt;, se ainda não tenha sido finalizado.&lt;/p&gt;
+
+&lt;p&gt;Caso o leitor tenha o interesse de ver isso sendo executado, abaixo segue um código de exemplo de &lt;em&gt;fork&lt;/em&gt; com a utilização de &lt;em&gt;Wait System Call&lt;/em&gt;, para esperar a finalização do processo filho.&lt;/p&gt;
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;#include &amp;lt;stdio.h&amp;gt;
+#include &amp;lt;unistd.h&amp;gt;
+#include &amp;lt;wait.h&amp;gt;
+&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+
+  &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fork&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;printf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Processo Filho: %d&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;getpid&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;());&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;printf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Processo Pai: %d&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;getpid&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;());&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+  &lt;span class=&quot;n&quot;&gt;wait&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;_-uma-breve-introdução-ao-exec&quot;&gt;&amp;gt;_ Uma breve introdução ao Exec&lt;/h2&gt;
+&lt;p&gt;O &lt;strong&gt;exec&lt;/strong&gt;, diferentemente do &lt;strong&gt;fork&lt;/strong&gt;, não cria um processo. Ele é uma funcionalidade do sistema operacional que executa um arquivo que possa ser executado, substituindo o arquivo executável já existente naquele determinado processo. Como ele não faz a criação de um novo processo, mas utiliza o processo já em execução, não há uma mudança de &lt;strong&gt;PID&lt;/strong&gt;. Entretanto, todo o contexto do processo se modifica, tais como o código e os dados, pelos do novo programa em execução&lt;/p&gt;
+
+&lt;p&gt;Entendendo isso, fica mais simples do leitor entender o que o &lt;strong&gt;comando exec&lt;/strong&gt; no &lt;em&gt;linux&lt;/em&gt; faz.&lt;/p&gt;
+
+&lt;p&gt;Abaixo, da mesma maneira que feito com o &lt;strong&gt;fork&lt;/strong&gt;, um exemplo de código utilizando-se do &lt;strong&gt;exec&lt;/strong&gt;:&lt;/p&gt;
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;#include &amp;lt;stdio.h&amp;gt;
+#include &amp;lt;unistd.h&amp;gt;
+&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+
+  &lt;span class=&quot;n&quot;&gt;printf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Mensagem mostrada na tela. Logo abaixo, uma listagem de diretório: &lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;/usr/bin/ls&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;-l&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;execv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+  
+  &lt;span class=&quot;n&quot;&gt;printf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Esse texto nunca será mostrado =(&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;_-voltando-ao-comando-exec&quot;&gt;&amp;gt;_ Voltando ao Comando Exec…&lt;/h2&gt;
+&lt;p&gt;Com essa introdução à alguns conceitos de &lt;strong&gt;sistemas operacionais&lt;/strong&gt;, fica mais simples explicar o que o &lt;strong&gt;comando exec&lt;/strong&gt; faz. Na prática, ele faz o que foi descrito sobre o &lt;strong&gt;exec de sistemas operacionais&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;Existem alguns argumentos nele que são úteis:&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;-c&lt;/strong&gt; = É usado para executar o comando sem definir as variáveis de ambiente definidas por padrão. É mais usado para caso queira isolar e tornar mais ágil a execução, já que não há o carregamento das variáveis de ambiente.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;-l&lt;/strong&gt; = É usado para executar o comando como um &lt;em&gt;shell de login&lt;/em&gt;. Na prática, seria carregando todas as variáveis presentes nos arquivos de configuração e &lt;em&gt;profile&lt;/em&gt;, assim como é feito em um &lt;em&gt;shell&lt;/em&gt; convencional.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;-a&lt;/strong&gt; = Altera o nome do comando ao qual você está executando com o &lt;strong&gt;comando exec&lt;/strong&gt;. Ao digitar o comando &lt;strong&gt;ps&lt;/strong&gt; ou &lt;strong&gt;top&lt;/strong&gt;, verá que o processo do &lt;strong&gt;exec&lt;/strong&gt; está com outro nome no comando executado.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Apesar de existirem esses argumentos, eles serão usados apenas em algumas situações bem específicas. Uma das formas mais comuns do uso do &lt;strong&gt;comando exec&lt;/strong&gt;, seria a utilização de &lt;em&gt;redirecionadores&lt;/em&gt; e &lt;em&gt;descritores de arquivos&lt;/em&gt;.&lt;/p&gt;
+
+&lt;h3 id=&quot;redirecionadores&quot;&gt;Redirecionadores&lt;/h3&gt;
+&lt;p&gt;Os redirecionadores de terminal, podem ser usados em conjunto com o &lt;strong&gt;exec&lt;/strong&gt; para fazer com que os resultados de &lt;strong&gt;STDERR&lt;/strong&gt; e &lt;strong&gt;STDOUT&lt;/strong&gt; sejam ocultados. Isso permite com que execute uma série de comandos, sem obter nenhuma saída no terminal. Além disso, é possível redirecionar eles para um ou mais arquivos diferentes.&lt;/p&gt;
+
+&lt;p&gt;Existem dois símbolos principais para o uso de redirecionadores: o &lt;strong&gt;&amp;gt;&lt;/strong&gt; e o &lt;strong&gt;&amp;lt;&lt;/strong&gt;. Existem alguns outros como o &lt;strong&gt;&amp;gt;&amp;gt;&lt;/strong&gt;, &lt;strong&gt;&amp;lt;&amp;lt;&amp;lt;&lt;/strong&gt;, e &lt;strong&gt;&amp;lt;&amp;lt;&lt;/strong&gt;, entretanto, para não ficar longo este artigo, eles não serão abordados.&lt;/p&gt;
+
+&lt;p&gt;Caso queira que todas as saídas do &lt;strong&gt;STDOUT&lt;/strong&gt; executados pelo &lt;strong&gt;exec&lt;/strong&gt;, sejam salvas em um arquivo, execute o seguinte comando:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;exec&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;/tmp/exec.log
+&lt;span class=&quot;c&quot;&gt;# ou exec 1&amp;gt;/tmp/exec.log&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Se deseja redirecionar dois dos descritores de arquivos padrões, o &lt;strong&gt;STDOUT&lt;/strong&gt; e &lt;strong&gt;STDERR&lt;/strong&gt;, redirecione o &lt;strong&gt;STDERR&lt;/strong&gt;, para o &lt;strong&gt;STDOUT&lt;/strong&gt;:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;exec &lt;/span&gt;1&amp;gt;/tmp/exec_all.log 2&amp;gt;&amp;amp;1
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Para voltar ao normal, use o comando abaixo, redirecionando a saída dos comandos para o terminal novamente:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;exec &lt;/span&gt;1&amp;gt;/dev/tty
+&lt;span class=&quot;c&quot;&gt;#ou exec &amp;gt;/dev/tty&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;É possível também fazer o redirecionamento de todas as entradas, executando o comando abaixo:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;exec cat&lt;/span&gt; &amp;lt;/etc/passwd
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;descritores-de-arquivos&quot;&gt;Descritores de Arquivos&lt;/h3&gt;
+&lt;p&gt;No &lt;em&gt;linux&lt;/em&gt;, existe algo que é chamado de descritores de arquivos, isso se dá ao fato de que tudo no &lt;em&gt;linux&lt;/em&gt; são arquivos. Estes descritores seriam como atalhos, que permitem com que alguns recursos sejam manejados com facilidade. Com os descritores de arquivos, é possível trabalhar com a saída do terminal, entradas do teclado e abrir arquivos. Anteriormente, foi observado o seu uso nos redirecionadores. Abaixo, Será explicado um pouco como pode-se manipular esses descritores usando o &lt;strong&gt;comando exec&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;Usando o &lt;em&gt;bash&lt;/em&gt; como exemplo, ele normalmente trabalha com três descritores de arquivos sempre abertos:&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;Um descritor de arquivo que serve de entrada padrão de dados&lt;/li&gt;
+  &lt;li&gt;Um descritor de arquivo que serve de saída padrão de dados&lt;/li&gt;
+  &lt;li&gt;Um descritor de arquivo onde as mensagens de erro são gravadas&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Esses descritores são definidos em &lt;em&gt;/usr/include/unistd.h&lt;/em&gt; conforme a numeração abaixo:&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;0&lt;/strong&gt; = O Descritor de arquivo 0, simboliza a entrada de dados (normalmente é o teclado).&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;1&lt;/strong&gt; = O Descritor de arquivo 1, simboliza a saída de dados (normalmente, é o terminal).&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;2&lt;/strong&gt; = O Descritor de arquivo 2, simboliza a saída de erro (normalmente, é o terminal).&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;255&lt;/strong&gt; = O Descritor de arquivo 255, é um &lt;em&gt;backup&lt;/em&gt; dos descritores padrões. Ele é usado apenas caso você os modifique.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Quando um processo é criado, ele herda as cópias desses descritores, que irão dizer para onde ele deve enviar, e receber, cada informação.&lt;/p&gt;
+
+&lt;p&gt;É possível redirecionar a entrada e saída (em simultâneo), criando um descritor e fazendo com que um arquivo seja criado, caso não exista:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;exec &lt;/span&gt;3&amp;lt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;arquivo_teste.txt
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Dessa forma, é possível criar o &lt;strong&gt;Descritor de Arquivo de número 3&lt;/strong&gt;, e usar ele tanto como saída para novas informações, como também como entrada das informações antigas. É importante entender que as informações inseridas após essa criação do descritor, não são lidas por ele, apenas as informações que já estavam armazenadas lá anteriormente.&lt;/p&gt;
+
+&lt;p&gt;Uma forma de fazer essa saída, seria utilizando o comando abaixo:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;exec &lt;/span&gt;1&amp;gt;&amp;amp;3
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Como pode ser observado no comando acima, toda vez que deseja redirecionar a saída de um descritor para outro, é necessário colocar o &lt;strong&gt;&amp;amp;&lt;/strong&gt; na frente da numeração do descritor. O código acima, redireciona o &lt;strong&gt;descritor 1&lt;/strong&gt;, que no &lt;em&gt;bash&lt;/em&gt; tem a sua função atrelada a saída padrão dos comandos, para o &lt;strong&gt;descritor 3&lt;/strong&gt;. Com isso, a saída dos comandos serão direcionados para o &lt;strong&gt;descritor 3&lt;/strong&gt;, cuja função é ler e escrever no &lt;em&gt;arquivo_teste.txt&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;É possível, em casos de redirecionadores de entrada, ler o que está armazenado nele:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;read&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-u&lt;/span&gt; 3 line
+&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$line&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;O comando &lt;strong&gt;read &lt;/strong&gt;irá utilizar o argumento &lt;strong&gt;-u&lt;/strong&gt;, cuja função é ler descritores de arquivos, permitindo com que ele leia uma linha deste descritor e armazene ela em uma variável chamada &lt;em&gt;line&lt;/em&gt;. Essa é a forma mais comum de conseguir ler as entradas presentes nos descritores.&lt;/p&gt;
+
+&lt;p&gt;Outra boa prática, é sempre fechar os descritores que já foram utilizados. Assim como na programação de outras linguagens, não é bom abrir um arquivo e não fechar ele após usá-lo, também não é bom abrir um descritor de arquivo, e não fechá-lo depois. Para fechar um descritor de arquivos, utilize o seguinte comando:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;exec &lt;/span&gt;3&amp;gt;&amp;amp;-
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Quando se trata de descritores numéricos, para fechar sempre será usada essa sintaxe para fechá-lo: &lt;strong&gt;&amp;amp;-&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;Caso o descritor tenha outra numeração, utilize ela, ao invés do &lt;strong&gt;número 3&lt;/strong&gt;. Por padrão, o limite máximo de descritores de arquivos que podem ser abertos, é de &lt;strong&gt;1024&lt;/strong&gt; no &lt;em&gt;bash&lt;/em&gt;. Caso queira saber o número exato em seu sistema, execute o comando:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;ulimit&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-n&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;É possível também utilizar ao invés de números, algum nome de variável, como por exemplo &lt;em&gt;meudesc&lt;/em&gt;. Dessa forma, é possível fazer a manipulação sem usar números diretamente. Para criar um descritor desta forma, utilize o seguinte comando:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;exec&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;meudesc&lt;span class=&quot;o&quot;&gt;}&amp;gt;&lt;/span&gt;&amp;amp;1
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;O comando acima, fará com que todos os comandos redirecionados para o descritor &lt;strong&gt;{meudesc}&lt;/strong&gt;, sejam enviados para a tela, devido ao redirecionamento do descritor criado para o &lt;strong&gt;descritor 1&lt;/strong&gt;, que trata do &lt;strong&gt;STDOUT&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;Caso execute o comando abaixo, ele será redirecionado para o &lt;strong&gt;STDOUT&lt;/strong&gt;:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;ls&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-l&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&amp;amp;&lt;span class=&quot;nv&quot;&gt;$meudesc&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Sempre quando for usar este tipo de descritor, é necessário incluir o &lt;strong&gt;&amp;amp;$&lt;/strong&gt; no nome dele.&lt;/p&gt;
+
+&lt;p&gt;Para fechar esse tipo de descritor, basta executar o comando abaixo:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;exec&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;meudesc&lt;span class=&quot;o&quot;&gt;}&amp;gt;&lt;/span&gt;&amp;amp;-
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;outros-usos-comuns&quot;&gt;Outros usos comuns&lt;/h3&gt;
+&lt;p&gt;Existem usos mais comuns do &lt;strong&gt;comando exec&lt;/strong&gt; também, que não seriam a utilização de descritores de arquivos.&lt;/p&gt;
+
+&lt;p&gt;O uso mais comum, seria executar um comando e encerrar a sessão em que está, por exemplo:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;exec echo &lt;/span&gt;valor
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;O comando &lt;strong&gt;echo&lt;/strong&gt; será executado, e logo após encerrará a sessão do &lt;em&gt;bash&lt;/em&gt; em que está.&lt;/p&gt;
+
+&lt;p&gt;É possível também mudar de &lt;em&gt;shell&lt;/em&gt;, sem criar uma &lt;em&gt;subshell&lt;/em&gt;, naquela sessão atual. A vantagem disso, é não ter um processo pai responsável consumindo memória:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;exec&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-l&lt;/span&gt; sh
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;O exemplo acima, substitui o &lt;em&gt;shell&lt;/em&gt; atual pelo &lt;em&gt;sh&lt;/em&gt;.&lt;/p&gt;
+
+&lt;h2 id=&quot;_-conclusão&quot;&gt;&amp;gt;_ Conclusão&lt;/h2&gt;
+&lt;p&gt;Neste artigo, foi mostrado ao leitor, o &lt;strong&gt;comando exec&lt;/strong&gt;, e seus inúmeros usos. Ele é útil em manejar arquivos utilizando descritores, podendo ser usado para ler todas as linhas de um arquivo de uma forma mais eficiente do que utilizando comandos que fariam essa leitura, como o &lt;strong&gt;comando cat&lt;/strong&gt;. Além disso, o leitor teve uma breve introdução de como funciona a criação de processos, e como alguns processos podem ser dependentes de outros.&lt;/p&gt;
+
+&lt;p&gt;Nem sempre um processo ser dependente de outro é uma má escolha. Cabe ao usuário decidir o que é o melhor para cada situação.&lt;/p&gt;
+
+&lt;p&gt;Gostou do artigo, tem alguma sugestão ou ficou com dúvidas? Deixe um comentário!&lt;/p&gt;
+
+&lt;div class=&quot;breaker&quot;&gt;&lt;/div&gt;</content><author><name>keven</name></author><category term="blog" /><category term="linux" /><category term="comandos" /><summary type="html">No artigo anterior desta série de artigos, o leitor obteve conhecimentos sobre o comando alias. Ele é um dos comandos embutidos no bash. Esses comandos embutidos, também conhecidos como built-in, apesar de parecerem simples, são poderosos, já que possibilitam uma comunicação mais rápida com recursos do sistema. Um desses comandos embutidos, permite com que o usuário utilize descritores de arquivos de uma forma mais prática. O comando exec, permite realizar essa manipulação, além de fazer a sua função principal: executar um novo programa no mesmo processo em que está, sem utilizar uma subshell. Neste artigo, o leitor será introduzido ao comando exec e aos conceitos de sistemas operacionais, exec e fork.</summary></entry><entry><title type="html">Comandos Linux: Alias</title><link href="https://stephan-lopes.github.io/blog/comandos-linux-alias/" rel="alternate" type="text/html" title="Comandos Linux: Alias" /><published>2022-06-28T09:00:00+00:00</published><updated>2022-06-28T09:00:00+00:00</updated><id>https://stephan-lopes.github.io/blog/comandos-linux-alias</id><content type="html" xml:base="https://stephan-lopes.github.io/blog/comandos-linux-alias/">&lt;p&gt;&lt;em&gt;No artigo anterior dessa série de artigos, o leitor foi introduzido um pouco sobre Variáveis de Ambiente, e Comandos Embutidos no Bash. No linux, existem alguns comando que são próprios do terminal. Esses comandos permitem realizar tarefas administrativas, ou então, tarefas que possibilitam manejar a forma como pode ser trabalhado com o bash. Neste artigo, o leitor será introduzido a conhecer um dos comandos built-in do linux: o alias.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;_-o-comando-alias&quot;&gt;&amp;gt;_ O Comando Alias&lt;/h2&gt;
+&lt;p&gt;O comando &lt;strong&gt;alias&lt;/strong&gt;, é um comando embutido do &lt;em&gt;bash&lt;/em&gt; que permite escrever atalhos de comandos, facilitando assim, o uso de comandos grandes/complexos no dia-a-dia. Algumas distribuições &lt;strong&gt;linux&lt;/strong&gt; já possuem alguns &lt;strong&gt;alias&lt;/strong&gt; configurados. Um deles, que pode ser citado é o &lt;strong&gt;ll&lt;/strong&gt;:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# caso o alias não tenha sido definido pela distribuição que está usando, copie o comando, e cole no terminal&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;alias &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;ll&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'ls -l'&lt;/span&gt; 
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Quando um &lt;strong&gt;alias&lt;/strong&gt; é definido, ele permite com que usando o atalho, neste caso o &lt;strong&gt;ll&lt;/strong&gt;, seja executado na verdade o comando &lt;strong&gt;ls -l&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;Para visualizar todos os &lt;strong&gt;alias&lt;/strong&gt; presentes na sessão atual do &lt;em&gt;bash&lt;/em&gt;, execute o comando &lt;strong&gt;alias&lt;/strong&gt; sem nenhum argumento.&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;alias&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;_-o-que-vem-primeiro-o-comando-ou-o-atalho&quot;&gt;&amp;gt;_ O que vem primeiro: o comando ou o atalho?&lt;/h2&gt;
+&lt;p&gt;Toda vez que um comando é digitado no &lt;em&gt;bash&lt;/em&gt;, é feito primeiro a checagem se o comando possuí um atalho. Se ele possuir, então ele é executado. Caso ele não possua, é feita a verificação se aquele comando existe.&lt;/p&gt;
+
+&lt;p&gt;Para fazer o teste, o leitor pode definir um &lt;strong&gt;alias&lt;/strong&gt; para um comando com o nome &lt;strong&gt;cd&lt;/strong&gt;:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;alias cd&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;echo acho que não mudou de diretorio :&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Ao digitar o comando &lt;strong&gt;cd&lt;/strong&gt;, o texto do comando &lt;strong&gt;echo&lt;/strong&gt; será escrito ao invés de navegar entre diretórios, como deveria fazer o comando &lt;strong&gt;cd&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;Isso acontece porque o &lt;em&gt;bash&lt;/em&gt;, antes de executar um comando, faz a leitura do texto enviado pelo terminal, para então, posteriormente, executá-lo. Para melhor entendimento, o fluxo abaixo mostra a ordem de execução de um comando no &lt;em&gt;bash&lt;/em&gt;:&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;Bash faz a leitura do comando digitado&lt;/li&gt;
+  &lt;li&gt;Bash verifica se existe algum alias em tempo de leitura do comando&lt;/li&gt;
+  &lt;li&gt;Bash passa para a fase de execução&lt;/li&gt;
+  &lt;li&gt;Bash executa o comando, se ele estiver presente no $PATH&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Quando ele encontra algum atalho de comando na fase de leitura do comando digitado, ele faz a substituição deste atalho na fase de execução. Caso o &lt;strong&gt;alias&lt;/strong&gt; seja um atalho de um atalho, ele executa a conversão até chegar a um comando. Se o fim desse &lt;strong&gt;alias&lt;/strong&gt; não for um comando, ou for um comando que não está presente no &lt;strong&gt;PATH&lt;/strong&gt;, ele dará erro em tempo de execução, informando que o comando não existe.&lt;/p&gt;
+
+&lt;h2 id=&quot;_-criando-um-alias&quot;&gt;&amp;gt;_ Criando um Alias&lt;/h2&gt;
+&lt;p&gt;A sintaxe de uso do comando &lt;strong&gt;alias&lt;/strong&gt;, não é complicado, mas simples. É possível criar um &lt;strong&gt;alias&lt;/strong&gt; seguindo o molde abaixo:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;alias &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;COMANDO_ATALHO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;COMANDO_ORIGINAL&quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;O &lt;em&gt;COMANDO_ORIGINAL&lt;/em&gt; pode ser colocado entre &lt;em&gt;aspas duplas&lt;/em&gt;, &lt;em&gt;simples&lt;/em&gt;, e &lt;em&gt;crase&lt;/em&gt;, permitindo definir &lt;em&gt;flags&lt;/em&gt;, e argumentos. O &lt;em&gt;COMANDO_ATALHO&lt;/em&gt; não pode conter &lt;strong&gt;/&lt;/strong&gt;, &lt;strong&gt;$&lt;/strong&gt;, &lt;strong&gt;`&lt;/strong&gt;, e &lt;strong&gt;=&lt;/strong&gt;. Além disso, todo o argumento a mais passado para o comando de atalho, é redirecionado como um argumento do comando original. Em casos que isso não é algo desejado, adicione &lt;strong&gt;;&lt;/strong&gt; no final do &lt;strong&gt;alias&lt;/strong&gt;, para que novos argumentos sejam entendidos como comandos, e não como um argumento do comando executado pelo &lt;strong&gt;alias&lt;/strong&gt;.&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;alias &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;la&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;ls -la;&quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Se o &lt;strong&gt;alias&lt;/strong&gt; acima for executado passando algum argumento a ele, o argumento será executado como comando.&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;la &lt;span class=&quot;nt&quot;&gt;-R&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;# O alias *la* será interpretado, mas o -R será tratado como se fosse um comando, então, irá falhar.&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Também é importante definir um valor ao &lt;strong&gt;alias&lt;/strong&gt;. Se nenhum valor for definido para o comando de atalho, ele não será criado.&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;alias &lt;/span&gt;lf &lt;span class=&quot;c&quot;&gt;# Se o usuário digitar **lf** no terminal, será informado que o comando não existe.&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Algo que é incomum, mas possível, é a criação de um &lt;strong&gt;alias&lt;/strong&gt; que tem um &lt;strong&gt;alias&lt;/strong&gt; como seu comando.&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;alias &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;rmi&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;rm -i&quot;&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;alias &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;rrm&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;rmi -r&quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Se executar o comando &lt;strong&gt;rrm&lt;/strong&gt; ele irá interpretar o &lt;strong&gt;alias&lt;/strong&gt; &lt;strong&gt;rmi&lt;/strong&gt; passando o &lt;strong&gt;-r&lt;/strong&gt; como argumento, que executará o comando &lt;strong&gt;rm -i -r&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;h2 id=&quot;_-criando-um-alias-global&quot;&gt;&amp;gt;_ Criando um Alias Global&lt;/h2&gt;
+&lt;p&gt;Para realizar a criação de um &lt;strong&gt;alias&lt;/strong&gt; que possa ser usado entre sessões, será necessário definir ele em um arquivo. O arquivo, no caso do &lt;em&gt;bash&lt;/em&gt;, seria um dos arquivos descritos abaixo:&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;~/.bashrc&lt;/li&gt;
+  &lt;li&gt;~/.bash_profile&lt;/li&gt;
+  &lt;li&gt;~/.profile&lt;/li&gt;
+  &lt;li&gt;~/.bash_login&lt;/li&gt;
+  &lt;li&gt;/etc/profile&lt;/li&gt;
+  &lt;li&gt;/etc/profiles.d/*&lt;/li&gt;
+  &lt;li&gt;/etc/bash.bashrc&lt;/li&gt;
+  &lt;li&gt;/etc/bashrc&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Se deseja apenas que o &lt;strong&gt;alias&lt;/strong&gt; esteja em uso em sessões do &lt;em&gt;shell&lt;/em&gt; que sejam efetuados &lt;em&gt;login&lt;/em&gt; via &lt;em&gt;console&lt;/em&gt;, ou então via &lt;strong&gt;SSH&lt;/strong&gt;, defina o &lt;strong&gt;alias&lt;/strong&gt; em arquivos &lt;strong&gt;profile&lt;/strong&gt;, já que eles são carregados em &lt;em&gt;shells de login&lt;/em&gt; somente.&lt;/p&gt;
+
+&lt;p&gt;Caso queira apenas  que o usuário atual tenha o &lt;strong&gt;alias&lt;/strong&gt;, defina em um dos arquivos ocultos na &lt;strong&gt;HOME&lt;/strong&gt; do usuário. Ou, se preferir tornar global, ao ponto de que todos os usuários tenham determinado &lt;strong&gt;alias&lt;/strong&gt;, defina-o em algum dos arquivos que esteja no diretório &lt;strong&gt;/etc&lt;/strong&gt;. e presentes na lista acima.&lt;/p&gt;
+
+&lt;h2 id=&quot;_-removendo-um-alias&quot;&gt;&amp;gt;_ Removendo um Alias&lt;/h2&gt;
+&lt;p&gt;Quando cria um &lt;strong&gt;alias&lt;/strong&gt;, é possível que tenha o desejo depois de removê-lo. O comando &lt;strong&gt;unalias&lt;/strong&gt; pode ser usado para realizar essa remoção:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;unalias rm&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Assim como o &lt;strong&gt;alias&lt;/strong&gt; executado no terminal, ele é apenas definido na sessão atual. Se precisar remover um &lt;strong&gt;alias&lt;/strong&gt; definido para todas as sessões, a melhor alternativa é descobrir onde ele está sendo definido, e então removê-lo do arquivo. Caso isso não seja possível, pode ser informado em um dos arquivos acima (dependendo de seu uso) o comando &lt;strong&gt;unalias&lt;/strong&gt; e o nome de seu atalho.&lt;/p&gt;
+
+&lt;h2 id=&quot;_-conclusão&quot;&gt;&amp;gt;_ Conclusão&lt;/h2&gt;
+&lt;p&gt;Neste artigo, o leitor obteve informações de como visualizar, criar, gerenciar, e remover atalhos para comandos existentes no sistema. Esses atalhos são poderosos, podendo agilizar o dia-a-dia de quem trabalha com &lt;strong&gt;linux&lt;/strong&gt;, a medida que necessita cada vez mais usar argumentos e &lt;em&gt;flags&lt;/em&gt; em determinados comandos. No próximo artigo, o leitor será introduzido a outro comando built-in poderoso: o comando exec.&lt;/p&gt;
+
+&lt;div class=&quot;breaker&quot;&gt;&lt;/div&gt;</content><author><name>keven</name></author><category term="blog" /><category term="linux" /><category term="comandos" /><summary type="html">No artigo anterior dessa série de artigos, o leitor foi introduzido um pouco sobre Variáveis de Ambiente, e Comandos Embutidos no Bash. No linux, existem alguns comando que são próprios do terminal. Esses comandos permitem realizar tarefas administrativas, ou então, tarefas que possibilitam manejar a forma como pode ser trabalhado com o bash. Neste artigo, o leitor será introduzido a conhecer um dos comandos built-in do linux: o alias.</summary></entry><entry><title type="html">Comandos Linux: Variáveis de Ambiente</title><link href="https://stephan-lopes.github.io/blog/comandos-linux-variaveis-de-ambiente/" rel="alternate" type="text/html" title="Comandos Linux: Variáveis de Ambiente" /><published>2022-06-13T21:00:00+00:00</published><updated>2022-06-13T21:00:00+00:00</updated><id>https://stephan-lopes.github.io/blog/comandos-linux-variaveis-de-ambiente</id><content type="html" xml:base="https://stephan-lopes.github.io/blog/comandos-linux-variaveis-de-ambiente/">&lt;p&gt;&lt;em&gt;Assim como existem alguns comandos que podem ser usados no Shell, também existem variáveis que podem ser definidas pelo sistema, ou pelo usuário. Essas variáveis, podem ser utilizadas dentro de programas, pelo usuário ou pelo sistema. Elas são mais conhecidas como variáveis de ambiente. Neste artigo, o leitor será introduzido desde a criação de uma variável de ambiente, como a utilização da mesma. Também serão mostradas algumas variáveis de ambiente embutidos no &lt;strong&gt;Bash&lt;/strong&gt; (o shell usado como base), o que é uma subshell, além de comandos embutidos.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;_-o-que-é-uma-variável-e-uma-constante&quot;&gt;&amp;gt;_ O que é uma Variável e uma Constante?&lt;/h2&gt;
+&lt;p&gt;No &lt;strong&gt;Bash&lt;/strong&gt;, assim como nas &lt;strong&gt;linguagens de programação&lt;/strong&gt;, existem variáveis. Variáveis nada mais são do que espaços na memória de um determinado computador destinados a armazenar dados, que podem ser alterados durante a execução do programa. O que as difere de constantes, é que as variáveis podem ser alteradas. Já as contantes, não podem ter seu valor modificado após a sua declaração.&lt;/p&gt;
+
+&lt;p&gt;Caso esse termo pareça novo para o leitor, uma analogia com um produto qualquer no mundo em que vive, pode auxiliar no entendimento. Imagine a seguinte situação: Você vai até um supermercado em uma determinada data, vê o preço de um suco de 2L de laranja por R$ 10,00. No ano seguinte, você vai no mesmo supermercado, e vê o mesmo suco, da mesma marca, por R$ 12,00. Pode-se extrair dois valores para a analogia: O suco de laranja, e o preço dele.&lt;/p&gt;
+
+&lt;p&gt;O suco, pode ser comparado com uma constante. Ele não mudou, seus ingredientes não são diferentes, e ainda continua tendo mesma embalagem e marca. Já o preço, é algo que pode ser mudado, tanto que o suco de R$ 10,00, virou R$ 12,00. Sendo assim, o preço deste suco, pode ser comparado com uma variável. Se mudar uma contante, assim como mudar os ingredientes de um suco de laranja, estará transformando aquele endereço na memória, em outro. No caso do suco, estaria transformando ele em outro produto!&lt;/p&gt;
+
+&lt;p&gt;O mesmo não acontece quando o preço daquele produto se modifica. O endereço (o suco de laranja), continua sendo o mesmo. Só mudou o seu valor(preço).&lt;/p&gt;
+
+&lt;h2 id=&quot;_-declarando-uma-variável-no-bash&quot;&gt;&amp;gt;_ Declarando uma variável no Bash&lt;/h2&gt;
+&lt;p&gt;Para realizar a declaração de uma variável no &lt;strong&gt;Bash&lt;/strong&gt;, use a seguinte sintaxe:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;nome_da_variavel&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;valor_da_varivavel
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Os nomes das variáveis são limitados a caracteres alfanuméricos. Como visto acima, não pode existir espaço entre o &lt;em&gt;nome da variável&lt;/em&gt; e o &lt;em&gt;valor&lt;/em&gt; dela. O uso de espaço só é permitido no valor da variável quando utiliza-se algo chamado &lt;em&gt;quoting&lt;/em&gt;. Isso será melhor explicado em outros artigos, mas em resumo, é permitido usar espaço quando o texto é envolto por aspas duplas ou simples.&lt;/p&gt;
+
+&lt;p&gt;Para ler o conteúdo armazenado na variável, use o comando embutido do &lt;strong&gt;bash&lt;/strong&gt;, &lt;strong&gt;echo&lt;/strong&gt;. Usando o comando, em conjunto com a variável, pode ser visualizado o seu valor. Por exemplo:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$nome_da_variavel&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Entretanto, essa variável está limitada para a &lt;em&gt;sessão&lt;/em&gt; em que está no &lt;strong&gt;Bash&lt;/strong&gt;. Caso abra uma nova &lt;em&gt;sessão&lt;/em&gt;, e tente executar o mesmo comando, o valor declarado na variável anteriormente não vai ser mostrado na tela. Veja também que para usar uma variável, deve ser colocado um &lt;strong&gt;$&lt;/strong&gt; na frente do nome dela.&lt;/p&gt;
+
+&lt;h2 id=&quot;_-o-que-são-sessões-no-bash&quot;&gt;&amp;gt;_ O que são sessões no Bash?&lt;/h2&gt;
+&lt;p&gt;O &lt;strong&gt;Bash&lt;/strong&gt;, é composto por &lt;em&gt;sessões&lt;/em&gt;. Cada &lt;em&gt;sessão&lt;/em&gt; possuí suas variáveis de ambiente. Existem &lt;em&gt;sessões&lt;/em&gt; que estão dentro de &lt;em&gt;sessões&lt;/em&gt;, elas são chamadas de &lt;em&gt;subsessões&lt;/em&gt; ou subshell. Elas podem ser usadas para executar pequenos comandos com algum retorno, por exemplo, e serem concatenados em um outro comando.&lt;/p&gt;
+
+&lt;p&gt;Toda vez que um script shell é executado, ele cria um subshell, um shell filho deste shell.&lt;/p&gt;
+
+&lt;p&gt;Para criar, você pode escrever algum comando entre parenteses &lt;strong&gt;()&lt;/strong&gt;, ou entre crase. Em alguns casos, será necessário a inclusão de um &lt;strong&gt;$&lt;/strong&gt; antes dos parenteses. Um exemplo:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# Executando com $()&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;VAR&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;$(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;echo &lt;/span&gt;valor&lt;span class=&quot;si&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# Executando com crase ``&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;VAR&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;echo &lt;/span&gt;valor&lt;span class=&quot;sb&quot;&gt;`&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Em palavras mais simples, um subshell, é um processo filho deste shell principal. Caso abra uma nova &lt;em&gt;sessão&lt;/em&gt; do &lt;strong&gt;bash&lt;/strong&gt;, dentro dessa em que está, e não exporte as variáveis de ambiente, você não irá conseguir ler o valor desta variável:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;VAR&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;1
+bash
+&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$VAR&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Para que consiga ler o valor dessa variável dentro destes shells, é necessário incluir o comando embutido &lt;strong&gt;export&lt;/strong&gt; antes da variável. O seguinte comando irá funcionar:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;VAR&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;1
+bash
+&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$VAR&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;_-variáveis-pré-definidas-e-dinâmicas-no-bash&quot;&gt;&amp;gt;_ Variáveis pré-definidas e dinâmicas no Bash&lt;/h2&gt;
+&lt;p&gt;O Bash possuí algumas variáveis pré-definidas, que podem ser de grande auxilio para o usuário. As principais seriam:&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;DISPLAY&lt;/strong&gt; = Ele define qual o display deve exibir suas janelas&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;HISTFILE&lt;/strong&gt; = Caminho para o histórico de comandos do usuário&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;HISTFILESIZE&lt;/strong&gt; = Quantidade de linhas/comandos que podem ser armazenados no arquivo de histórico&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;HOME&lt;/strong&gt; = Caminho para o diretório &lt;em&gt;home&lt;/em&gt; do usuário&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;PATH&lt;/strong&gt; = Diretório em que o Linux irá procurar por arquivos executáveis&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;PS1&lt;/strong&gt; = Aparência do seu Terminal (Prompt de Comando)&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;PWD&lt;/strong&gt; = Diretório atual&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;OLDPWD&lt;/strong&gt;= Diretório que estava anteriormente.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;TERM&lt;/strong&gt; = Terminal que está aberta a &lt;em&gt;sessão&lt;/em&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;LOGNAME&lt;/strong&gt; = Nome do usuário atual&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Além dessas variáveis, existe também algumas variáveis que são definidas dinamicamente no shell. As principais seriam:&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;$$&lt;/strong&gt; = Mostra o PID do Shell Atual (PID seria um número que identifica o processo)&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;$!&lt;/strong&gt; = Mostra o PID do último processo executado&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;$?&lt;/strong&gt; = Mostra o código de retorno do último processo/comando executado, sendo o codigo &lt;strong&gt;0&lt;/strong&gt; como sucesso.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;~&lt;/strong&gt; = Corresponde ao diretório &lt;em&gt;home&lt;/em&gt; do usuário.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;~root&lt;/strong&gt; = Corresponde ao diretório &lt;em&gt;home&lt;/em&gt; do usuário &lt;strong&gt;root&lt;/strong&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Essas variáveis embutidas atuam quase como comandos, já que devolvem valores que podem ser especialmente úteis até mesmo em scripts.&lt;/p&gt;
+
+&lt;h2 id=&quot;_-comandos-embutidos-no-bash&quot;&gt;&amp;gt;_ Comandos Embutidos no Bash&lt;/h2&gt;
+
+&lt;p&gt;Além de variáveis, existem alguns comandos embutidos no &lt;strong&gt;Bash&lt;/strong&gt;. Alguns deles, inclusive, já foram mostrados. Os principais comandos embutidos no bash seriam:&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;alias&lt;/strong&gt; = Cria um alias (nome alternativo) para um comandos&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;exec&lt;/strong&gt; = Executa um comando em uma nova &lt;em&gt;sessão&lt;/em&gt; do shell&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;echo&lt;/strong&gt; = Joga para a saída, um texto replicado, ou uma variável&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;env&lt;/strong&gt; = Sem argumentos, exibe as variáveis de ambientes, e os seus valores&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;export&lt;/strong&gt; = Define uma variável de ambiente para a &lt;em&gt;sessão&lt;/em&gt;, e para todas as &lt;em&gt;sessões&lt;/em&gt; filhas dessa&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;pwd&lt;/strong&gt; = Mostra o diretório atual&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;set&lt;/strong&gt; = Define o valor de uma variável. Quando não usado com argumentos, exibe as variáveis já definidas&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;unset&lt;/strong&gt; = Remove uma variável da &lt;em&gt;sessão&lt;/em&gt; do &lt;strong&gt;bash&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;_-conclusão&quot;&gt;&amp;gt;_ Conclusão&lt;/h2&gt;
+&lt;p&gt;Neste artigo, o leitor teve um resumo sobre variáveis de ambiente, bem como, sobre alguns comandos embutidos no shell. Nos próximos artigos, será mostrado um pouco mais sobre esses comandos, mostrando como podem ser usados na prática.&lt;/p&gt;
+
+&lt;div class=&quot;breaker&quot;&gt;&lt;/div&gt;</content><author><name>keven</name></author><category term="blog" /><category term="linux" /><category term="comandos" /><summary type="html">Assim como existem alguns comandos que podem ser usados no Shell, também existem variáveis que podem ser definidas pelo sistema, ou pelo usuário. Essas variáveis, podem ser utilizadas dentro de programas, pelo usuário ou pelo sistema. Elas são mais conhecidas como variáveis de ambiente. Neste artigo, o leitor será introduzido desde a criação de uma variável de ambiente, como a utilização da mesma. Também serão mostradas algumas variáveis de ambiente embutidos no Bash (o shell usado como base), o que é uma subshell, além de comandos embutidos.</summary></entry><entry><title type="html">Comandos Linux: A linha de Comando</title><link href="https://stephan-lopes.github.io/blog/comandos-linux-a-linha-de-comando/" rel="alternate" type="text/html" title="Comandos Linux: A linha de Comando" /><published>2022-06-09T20:00:00+00:00</published><updated>2022-06-09T20:00:00+00:00</updated><id>https://stephan-lopes.github.io/blog/comandos-linux-a-linha-de-comando</id><content type="html" xml:base="https://stephan-lopes.github.io/blog/comandos-linux-a-linha-de-comando/">&lt;p&gt;&lt;em&gt;No linux, temos um espaço, onde podemos conversar com recursos que são gerenciados pelo nosso sistema operacional, além de ter a possibilidade de usar ferramentas que podem nos auxiliar no dia-a-dia. Esse espaço se chama &lt;strong&gt;Terminal&lt;/strong&gt;. Esse é o primeiro artigo de uma série de postagens abordando como funciona a linha de comando no linux, bem como mostrar os comandos essênciais que devem ser conhecidos pelo administrador desse sistema. Eles podem ser aproveitados por qualquer pessoa que deseja conhecer mais sobre linux&lt;/em&gt;.&lt;/p&gt;
+
+&lt;h2 id=&quot;_-o-que-é-um-sistema-operacional&quot;&gt;&amp;gt;_ O que é um Sistema Operacional?&lt;/h2&gt;
+&lt;p&gt;Poderia começar de uma forma sem abordar isso, mas, é sempre bom contextualizar o que é um &lt;em&gt;Sistema Operacional&lt;/em&gt;, afinal, o &lt;a href=&quot;https://www.linux.org/&quot;&gt;Linux&lt;/a&gt; é um deles. Existem hoje, diversos &lt;em&gt;Sistemas Operacionais&lt;/em&gt;, tais como Unix, macOS, BSD, Minix, &lt;a href=&quot;https://www.linux.org&quot;&gt;Linux&lt;/a&gt;, Solaris, e por ai vai. O que eles tem em comum? Todos eles possuem duas funções principais (e diria eu, essênciais), que seriam:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Fornecer a programadores, um conjunto de recursos mais simples de serem manipulados ao invés de recursos abstratos e confusos do hardware.&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Gerenciar os recursos do hardware&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Em outras palavras, sendo elas bem resumidas, um &lt;em&gt;sistema operacional&lt;/em&gt; é o responsável por fazer uma interface entre o usuário e o hardware do computador.&lt;/p&gt;
+
+&lt;p&gt;O &lt;a href=&quot;https://www.linux.org&quot;&gt;Linux&lt;/a&gt;, não é um &lt;em&gt;Sistema Operacional&lt;/em&gt; completo, diferente de como a maioria das pessoas imagina. Ele é somente o &lt;strong&gt;Kernel&lt;/strong&gt;. Ele faz as duas funções importantes, abordadas anteriormente. Porém, quem dá “vida” ao &lt;em&gt;Sistema Operacional&lt;/em&gt;, são as distribuições, que vem com algumas interfaces de iteração com a máquina, sendo ela via texto ou gráfica, e também programas. Estes três pontos: &lt;strong&gt;Kernel&lt;/strong&gt;, &lt;strong&gt;Interface com Usuário&lt;/strong&gt;, e &lt;strong&gt;Programas&lt;/strong&gt;, em conjunto, podem ser definidos como um &lt;em&gt;Sistema Operacional&lt;/em&gt;.&lt;/p&gt;
+
+&lt;h2 id=&quot;_-quer-dizer-que-o-kernel-é-algo-inútil&quot;&gt;&amp;gt;_ Quer dizer que o Kernel é algo inútil?&lt;/h2&gt;
+&lt;p&gt;Claro que não! Sem ele, não existe esse gerenciamento e nem mesmo a abstração entre o usuário e seu hardware. Ele é algo que não interagimos diretamente, mas que existe no núcleo de seu &lt;em&gt;sistema operacional&lt;/em&gt;. Sem ele, as distribuições linux não existiriam.&lt;/p&gt;
+
+&lt;p&gt;Quando trabalhamos em uma linha de comando no &lt;a href=&quot;https://www.linux.org&quot;&gt;linux&lt;/a&gt;, também conhecido como &lt;strong&gt;SHELL&lt;/strong&gt;, estamos utilizando um programa, que pode manipular recursos do sistema, mas que ainda sim, não está no mesmo nível que o &lt;strong&gt;Kernel&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;h2 id=&quot;_-o-shell&quot;&gt;&amp;gt;_ O Shell&lt;/h2&gt;
+&lt;p&gt;O &lt;strong&gt;Shell&lt;/strong&gt;, nada mais é do que uma interface, um interpretador de comandos. Nele, podemos executar scripts, e utilizar uma série de comandos para manusear o sistema, seja modificando algum componente importante, ou apenas utilizando ele como “ponte” para abrir um editor de texto.&lt;/p&gt;
+
+&lt;p&gt;Abordaremos o &lt;strong&gt;Shell&lt;/strong&gt; conhecido como &lt;strong&gt;BASH&lt;/strong&gt;(&lt;em&gt;Bourne-Again SHell&lt;/em&gt;). Existem outros milhares de &lt;strong&gt;Shell&lt;/strong&gt;, como o &lt;strong&gt;ZSH&lt;/strong&gt;, &lt;strong&gt;SH&lt;/strong&gt;, &lt;strong&gt;CSH&lt;/strong&gt;, &lt;strong&gt;KSH&lt;/strong&gt;, etc. Cada um tem sua particularidade, como por exemplo o &lt;strong&gt;CSH&lt;/strong&gt; que permite o uso da &lt;em&gt;linguagem C&lt;/em&gt;, de forma iterativa, e de &lt;strong&gt;Shell Script&lt;/strong&gt;. Caso queira saber qual &lt;strong&gt;Shell&lt;/strong&gt; está utilizando, execute o comando:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$SHELL&lt;/span&gt; &lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Esse comando irá informar qual &lt;strong&gt;shell&lt;/strong&gt; você está usando. O &lt;strong&gt;Shell&lt;/strong&gt; em uso, é armazenado na variável de ambiente &lt;strong&gt;$SHELL&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;h2 id=&quot;_-comando-o-que-é-isso&quot;&gt;&amp;gt;_ Comando? O que é isso?&lt;/h2&gt;
+&lt;p&gt;Um comando é algo que você executa dentro do terminal, que retorna algum resultado para você, mostrando, ou não, na tela, o seu resultado. Existem três tipos de comandos:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Comando Interno do Shell(built-in)&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Binários localizados no PATH&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Scripts(sequência lógica de instruções interpretadas pelo Shell)&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Podemos definir que um programa também seja um comando. Não vemos ele sendo executado quando abrimos via interface gráfica, mas ele é utilizado toda a vez que abrimos um programa, como por exemplo, um navegador.&lt;/p&gt;
+
+&lt;h2 id=&quot;_-conclusão&quot;&gt;&amp;gt;_ Conclusão&lt;/h2&gt;
+&lt;p&gt;Neste artigo, foi abordado um pouco sobre o que é um &lt;em&gt;sistema operacional&lt;/em&gt;, para contextualizar a utilidade do uso de linhas de comando no &lt;a href=&quot;https://www.linux.org&quot;&gt;linux&lt;/a&gt;. Também, houve uma introdução sobre o que é um &lt;strong&gt;Shell&lt;/strong&gt;, e o que é um comando. Nos próximos artigos, iremos falar um pouco mais sobre eles, e introduzir o leitor às variáveis de ambiente.&lt;/p&gt;
+
+&lt;div class=&quot;breaker&quot;&gt;&lt;/div&gt;</content><author><name>keven</name></author><category term="blog" /><category term="linux" /><category term="comandos" /><summary type="html">No linux, temos um espaço, onde podemos conversar com recursos que são gerenciados pelo nosso sistema operacional, além de ter a possibilidade de usar ferramentas que podem nos auxiliar no dia-a-dia. Esse espaço se chama Terminal. Esse é o primeiro artigo de uma série de postagens abordando como funciona a linha de comando no linux, bem como mostrar os comandos essênciais que devem ser conhecidos pelo administrador desse sistema. Eles podem ser aproveitados por qualquer pessoa que deseja conhecer mais sobre linux.</summary></entry><entry><title type="html">Assinatura de Commits com GPG</title><link href="https://stephan-lopes.github.io/blog/assinaturas-de-commits-com-gpg/" rel="alternate" type="text/html" title="Assinatura de Commits com GPG" /><published>2022-04-29T23:00:00+00:00</published><updated>2022-04-29T23:00:00+00:00</updated><id>https://stephan-lopes.github.io/blog/assinaturas-de-commits-com-gpg</id><content type="html" xml:base="https://stephan-lopes.github.io/blog/assinaturas-de-commits-com-gpg/">&lt;p&gt;&lt;em&gt;No Git, toda vez que é feito um commit, ele coleta seu usuário e seu e-mail, e anexa em um Commit. Entretanto, ele pode ser manipulado, e alguém pode se passar por você. Sendo assim, o ideal é assinar seus commits com chave GPG. Com ela, você consegue comprovar que você é você, para todos aqueles que possuem uma chave pública da chave privada que só você possuí. Este tutorial, é um guia de configuração, bem como a demonstração do problema em si, e em como resolvê-lo. Espero que gostem, e coloquem em prática as dicas!&lt;/em&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;_-o-problema-do-commit-sem-assinatura&quot;&gt;&amp;gt;_ O Problema do Commit Sem Assinatura&lt;/h2&gt;
+&lt;p&gt;Em um ambiente de produção, o Commit sem assinatura é muito mais comum que o Commit com assinatura. Por isso, é importante que você configure o GPG para assinar seus commits. Essa, digamos, má pratica, abre brechas que podem ser exploradas, caso seus commits não sejam assinados. Vou mostrar um exemplo.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://stephan-lopes.github.io/assets/images/assinatura-de-commits-com-gpg/5496900581142.png&quot; alt=&quot;Imagem&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Quando adiciono um arquivo em um projeto e faço um &lt;em&gt;git commit&lt;/em&gt;, o git não assina o commit por padrão. Dessa forma, ele acaba pegando a variável &lt;strong&gt;user.name&lt;/strong&gt; e &lt;strong&gt;user.email&lt;/strong&gt;, que são definidas com os seguintes comandos:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;git config &lt;span class=&quot;nt&quot;&gt;--global&lt;/span&gt; user.name &lt;span class=&quot;s2&quot;&gt;&quot;Seu Nome&quot;&lt;/span&gt;
+git config &lt;span class=&quot;nt&quot;&gt;--global&lt;/span&gt; user.email &lt;span class=&quot;s2&quot;&gt;&quot;email@teste.com&quot;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Quando enviado por push, ele não valida se essas informações são verdadeiras ou não. Ou seja, quem vê dentro de um repositório, não sabe se realmente foi aquela pessoa que fez aquele commit.&lt;/p&gt;
+
+&lt;p&gt;Pra demonstrar isso, vamos criar um arquivo, e fazer um commit com outro usuário e e-mail, usando o seguinte código para isso:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;git commit &lt;span class=&quot;nt&quot;&gt;--author&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;Mark Zuckerberg marquinho@teste.com&quot;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-m&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Teste de commit&quot;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Após confirmarmos o Commit, temos esse resultado:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://stephan-lopes.github.io/assets/images/assinatura-de-commits-com-gpg/6636094248085.png&quot; alt=&quot;Imagem&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Talvez você diga: &lt;em&gt;“Mas Keven… Isso é em ambiente local, não vai acontecer nada se você colocar ele em um repositório do github.”&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Se pensou isso, sinto lhe dizer, mas está enganado. Olha o que acontece quando envio por push esses commits:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://stephan-lopes.github.io/assets/images/assinatura-de-commits-com-gpg/9114529757421.png&quot; alt=&quot;Imagem&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Preocupante, não? Mas calma, vamos resolver isso.&lt;/p&gt;
+
+&lt;h2 id=&quot;_-gerando-uma-chave-gpg&quot;&gt;&amp;gt;_ Gerando uma Chave GPG&lt;/h2&gt;
+&lt;p&gt;O primeiro passo para conseguirmos assinar nossos commits, é gerar uma chave GPG. Tenha certeza de que a sua máquina tem o GPG instalado. Usaremos a &lt;strong&gt;versão 2.2.19&lt;/strong&gt;, nesse tutorial, mas você pode usar qualquer versão (preferencialmente &amp;gt;= 2).&lt;/p&gt;
+
+&lt;p&gt;Para instalar, vamos usar o comando abaixo em um Ubuntu linux (em outro SO, como Windows ou Unix, sugiro procurar na documentação do github):&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;apt &lt;span class=&quot;nb&quot;&gt;install &lt;/span&gt;gnupg&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Após a instalação, vamos criar uma chave GPG, utilizando o comando abaixo:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;gpg &lt;span class=&quot;nt&quot;&gt;--full-generate-key&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Após a execução do comando, ele irá realizar a geração de uma chave GPG. Selecione o tipo de chave (no tutorial usaremos a &lt;strong&gt;RSA and RSA&lt;/strong&gt;), e dê enter.&lt;/p&gt;
+
+&lt;p&gt;Feito isso, será perguntado o tamanho da chave em bits. Para uma maior segurança, usaremos o tamanho de &lt;strong&gt;4096 bits&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;Será então solicitado que informe o número de dias que a chave deve permanecer viva. Se você não informar nada, a chave ficará viva por 0 dias, ou seja, para sempre. No tutorial, usaremos uma chave com validade de &lt;strong&gt;0 dias&lt;/strong&gt;. Nesse caso, quando é definido 0 dias, irá ser questionado se tem realmente certeza que quer criar uma chave com uma validade tão longa. &lt;strong&gt;Confirme e dê enter&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;Por fim, insira o &lt;strong&gt;nome&lt;/strong&gt;, e o &lt;strong&gt;endereço de e-mail&lt;/strong&gt; que deseja vincular a chave. O endereço de e-mail, pode ser de dois tipos:&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;Um endereço de e-mail pessoal, registrado na sua conta do GitHub.&lt;/li&gt;
+  &lt;li&gt;Ou, o mais indicado, um endereço de e-mail no-reply, que é gerado pelo GitHub.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Caso opte pela segunda opção, você pode entrar no site do GitHub e verificar este endereço de e-mail no-reply. Pra fazer isso, em seu &lt;strong&gt;Perfil&lt;/strong&gt;, acesse &lt;strong&gt;Settings&lt;/strong&gt;, posteriormente, acesse &lt;strong&gt;Emails&lt;/strong&gt;, e por fim, marque a caixa onde está escrito &lt;strong&gt;Keep my email addresses private&lt;/strong&gt;. Dentro dela, você pode obter esse endereço de e-mail no-reply.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://stephan-lopes.github.io/assets/images/assinatura-de-commits-com-gpg/6096521027427.png&quot; alt=&quot;Imagem&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Este endereço, dependendo de quando criou sua conta, pode mudar. Quem criou em 2017, pode ter um endereço de e-mail no-reply diferente, sem aqueles números antes do &lt;strong&gt;+&lt;/strong&gt;. Essa é a forma mais indicada, para evitar que deixe exposto seu e-mail, publicamente. Em casos que deseja deixar exposto, a primeira opção será a mais ideal.&lt;/p&gt;
+
+&lt;p&gt;No meu caso, o e-mail no-reply é &lt;strong&gt;40838038+stephan-lopes@users.noreply.github.com&lt;/strong&gt;. Após informar o endereço de e-mail, você pode adicionar algum comentário, ou &lt;strong&gt;deixar em branco&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;Será então solicitado para confirmar. Para isso, digite a letra &lt;strong&gt;o&lt;/strong&gt; e dê enter. Depois disso, você precisará informar a &lt;strong&gt;Passphrase&lt;/strong&gt;, que seria como uma senha. Informe a &lt;strong&gt;Passphrase&lt;/strong&gt; e dê enter. Use o mouse, ou o teclado, para que a chave seja gerada, e pronto! Ela foi gerada e agora está em seu ambiente!&lt;/p&gt;
+
+&lt;h2 id=&quot;_-colocando-a-chave-publica-na-conta-do-github&quot;&gt;&amp;gt;_ Colocando a Chave Publica na Conta do GitHub&lt;/h2&gt;
+&lt;p&gt;Com a chave gerada, precisamos inserir ela no Github. Precisamos fazer isso, por que o GitHub precisa validar se a chave realmente é sua. Se não, nada impediria você também de gerar uma chave, como fizemos anteriormente, informando um e-mail, que não é seu, e, se passando por essa pessoa, fazer um commit.&lt;/p&gt;
+
+&lt;p&gt;Vamos precisar da chave pública, então, utilize o comando abaixo:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;gpg &lt;span class=&quot;nt&quot;&gt;--list-secret-keys&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--keyid-format&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;long&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Esse comando listará todas as chaves que estão armazenados no agent. Você precisará encontrar uma chave que tenha o &lt;strong&gt;keyid&lt;/strong&gt; que você gerou. Esse &lt;strong&gt;keyid&lt;/strong&gt;, seria o código de letras depois do &lt;strong&gt;rsa4096/&lt;/strong&gt;, por exemplo.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://stephan-lopes.github.io/assets/images/assinatura-de-commits-com-gpg/8207360680388.png&quot; alt=&quot;Imagem&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Copie esse código, e execute o seguinte comando abaixo, para ter acesso a chave pública:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;gpg &lt;span class=&quot;nt&quot;&gt;--armor&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--export&lt;/span&gt; FF79A185C539E72E&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Copie a chave pública, fornecida como saída do comando e acesse o GitHub. Na página de configuração da conta, na seção &lt;strong&gt;SSH and GPG Key&lt;/strong&gt;, e depois, na seção &lt;strong&gt;GPG Key&lt;/strong&gt;, clique em &lt;strong&gt;New GPG Key&lt;/strong&gt;. &lt;strong&gt;Coloque a chave pública&lt;/strong&gt;, e depois, clique em &lt;strong&gt;Add GPG Key&lt;/strong&gt;. Forneça sua senha do GitHub para concluir.&lt;/p&gt;
+
+&lt;h2 id=&quot;_-configurando-endereço-de-e-mail-localmente&quot;&gt;&amp;gt;_ Configurando Endereço de E-mail Localmente&lt;/h2&gt;
+&lt;p&gt;Agora que a chave foi inserida no GitHub, precisamos configurar o endereço de e-mail localmente. Lembra do endereço de e-mail no-reply que você gerou? Este endereço é o endereço que será usado aqui, e será atrelado aos seus commits.&lt;/p&gt;
+
+&lt;p&gt;Para concluir, use o seguinte comando:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;git config &lt;span class=&quot;nt&quot;&gt;--global&lt;/span&gt; user.email &lt;span class=&quot;s2&quot;&gt;&quot;COLOQUE AQUI SEU ENDEREÇO DE EMAIL AQUI&quot;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Isso irá mudar globalmente. Se você quiser mudar apenas para o repositório atual, use o comando sem a opção &lt;strong&gt;–global&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;h2 id=&quot;_-configurando-assinatura-em-ambiente-local&quot;&gt;&amp;gt;_ Configurando Assinatura em Ambiente Local&lt;/h2&gt;
+&lt;p&gt;Mesmo com todas essas configurações, a ferramenta git ainda não sabe que deve assinar todos os commits. Lembra do que eu disse no inicio, em que isso não é feito por padrão?&lt;/p&gt;
+
+&lt;p&gt;Caso queira assinar um commit, até o momento, você teria que adicionar a flag &lt;strong&gt;-S&lt;/strong&gt; no comando &lt;em&gt;git commit&lt;/em&gt;.&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;git commit &lt;span class=&quot;nt&quot;&gt;-S&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-m&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Mensagem de commit&quot;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Entretanto, essa forma é uma forma um pouco “custosa”. Isso, porque, a cada vez que precise fazer um commit, terá que lembrar de adicionar a Flag. Outro problema que podemos identificar também, é que não definimos para a ferramenta, qual chave ela deve utilizar. Imagine que tenhamos 10 chaves GPG. Como o git saberá qual chave deve ser usada?&lt;/p&gt;
+
+&lt;p&gt;E os problemas não acabaram por ai… Como o GPG irá perguntar a palavra passe? Por padrão, ele não sabe para qual tty ele deve perguntar isso!&lt;/p&gt;
+
+&lt;p&gt;Então, mesmo tentando fazer essa assinatura manualmente, você iria se deparar com o seguinte erro:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;git commit &lt;span class=&quot;nt&quot;&gt;-S&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-m&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;....&quot;&lt;/span&gt;
+error: gpg failed to sign the data
+fatal: failed to write commit object&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Precisamos resolver esses problemas. Vamos primeiro informar o git sobre qual a chave que deve ser utilizada. Busque o &lt;strong&gt;keyid&lt;/strong&gt;, como feito anteriormente:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;gpg &lt;span class=&quot;nt&quot;&gt;--list-secret-keys&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--keyid-format&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;long&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;E depois, informe ele no seguinte comando (&lt;em&gt;Troque o FF79A185C539E72E pelo seu keyid.&lt;/em&gt;):&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;git config &lt;span class=&quot;nt&quot;&gt;--global&lt;/span&gt; user.signingkey FF79A185C539E72E&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Feito! Agora, todos os commits assinados que você fizer, serão assinados com a chave que você definiu!&lt;/p&gt;
+
+&lt;p&gt;Entretanto, o git ainda não faz isso de forma automática. Ele ainda espera que você informe a flag &lt;strong&gt;-S&lt;/strong&gt; no comando &lt;em&gt;git commit&lt;/em&gt;. Para mudar isso, use o comando abaixo:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;git config &lt;span class=&quot;nt&quot;&gt;--global&lt;/span&gt; commit.gpgsign &lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Com isso, cada vez que executar um &lt;em&gt;git commit&lt;/em&gt;, o git irá assinar o commit de forma automática, sem você precisar adicionar a flag &lt;strong&gt;-S&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;O último passo, é definir nosso TTY, para que o GPG possa perguntar a palavra passe. Caso contrário, teremos aquele erro na hora que formos assinar o commit, por não fornecermos a palavra passe. Execute o comando abaixo, em seu &lt;strong&gt;~/.bashrc&lt;/strong&gt;:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'export GPG_TTY=$(tty)'&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&lt;/span&gt; ~/.bashrc&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Caso esteja usando outro terminal que não seja o bash, use o arquivo apropriado para ele. Uma outra observação a ser feita, é em casos de uso com o zsh, utilizando fontes Powerlevel10k. Copie o export acima para o arquivo .zshrc, antes do Powerlevel. Caso contrário, isso não irá funcionar.&lt;/p&gt;
+
+&lt;p&gt;Abra uma nova sessão, ou então, execute o comando abaixo no terminal, para que isso já se torne válido na sessão atual:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;nb&quot;&gt;source&lt;/span&gt; ~/.bashrc&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Pronto! A partir de agora, todo o commit que enviar no git, será assinado com a chave que você definiu, de forma automática!&lt;/p&gt;
+
+&lt;h2 id=&quot;_-enviando-um-commit-para-o-github&quot;&gt;&amp;gt;_ Enviando um Commit para o GitHub&lt;/h2&gt;
+&lt;p&gt;Vamos agora enviar um commit para o Github, para testar se tudo está funcionando corretamente. Pra isso, eu criei em meu repositório um novo arquivo, chamado &lt;strong&gt;teste-commit.txt&lt;/strong&gt;, adicionei ele, executando o comando &lt;em&gt;git add&lt;/em&gt;, e depois, executei o comando &lt;em&gt;git commit&lt;/em&gt;. Por fim, fiz o &lt;em&gt;git push&lt;/em&gt;.&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;git add teste-commit.txt
+git commit &lt;span class=&quot;nt&quot;&gt;-m&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Adicionando arquivo teste-commit.txt&quot;&lt;/span&gt;
+git push origin main&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Quando fizer o &lt;em&gt;git commit&lt;/em&gt;, será solicitado para colocar a palavra passe da chave GPG, para que possa ser assinado esse commit. Após realizar os comandos acima, temos este resultado:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://stephan-lopes.github.io/assets/images/assinatura-de-commits-com-gpg/1311245618908.png&quot; alt=&quot;Imagem&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Veja que com isso, temos um commit assinado! Podemos ver isso, com a badge de &lt;strong&gt;Verified&lt;/strong&gt; nele. No caso de estar &lt;strong&gt;Unverified&lt;/strong&gt;, semelhante com o que aparece abaixo, verifique seu commit, e veja se o nome de usuário, o email e a chave GPG estão corretos. Verifique também se colocou a chave GPG Pública corretamente no Github.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://stephan-lopes.github.io/assets/images/assinatura-de-commits-com-gpg/2013428650008.png&quot; alt=&quot;Imagem&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;_-definindo-cache-de-chaves-gpg&quot;&gt;&amp;gt;_ Definindo Cache de Chaves GPG&lt;/h2&gt;
+&lt;p&gt;Embora tenhamos definido uma forma com que todos os commits sejam assinados, teremos que colocar a passphrase todas as vezes que fizermos um commit. Por mais que isso dê mais segurança, para algumas pessoas pode ser um problema, pois, a cada vez que fizermos um commit, o git irá pedir a passphrase.&lt;/p&gt;
+
+&lt;p&gt;Podemos então, definir um cache, fazendo com que o agent armazene temporariamente a passphrase. No tutorial, iremos definir esse período em 1 hora, mas, como você poderá ver, podemos definir qualquer período.&lt;/p&gt;
+
+&lt;p&gt;Para realizar essa tarefa, precisamos criar um arquivo chamado &lt;strong&gt;~/.gnupg/gpg-agent.conf&lt;/strong&gt;. E dentro dele, definir o seguinte:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;default-cache-ttl 3600
+max-cache-ttl 3600&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Por fim, reinicie o agent, com o seguinte comando:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;gpgconf &lt;span class=&quot;nt&quot;&gt;--kill&lt;/span&gt; gpg-agent&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Dessa forma, ele irá armazenar a passphrase, depois de digitada, por uma hora. Após o prazo, o agent irá pedir a passphrase novamente.&lt;/p&gt;
+
+&lt;h2 id=&quot;_-assinando-commits-antigos&quot;&gt;&amp;gt;_ Assinando Commits Antigos&lt;/h2&gt;
+&lt;p&gt;Mostramos como faz para assinar os novos Commits, mas, e caso queira assinar commits antigos, como podemos fazer isso?&lt;/p&gt;
+
+&lt;p&gt;Uma forma que você pode fazer isso, é utilizando o comando &lt;strong&gt;git rebase&lt;/strong&gt;. Com esse comando, ele irá assinar os commits não assinados. Lembre-se que o e-mail deve ser o mesmo da chave, sendo assim, em alguns casos, será necessário alterar o e-mail também.&lt;/p&gt;
+
+&lt;p&gt;Abaixo, vamos fazer um rebase, para que o git assine os commits antigos e altere o e-mail, de todos os commits. Entretanto, o código abaixo serve como um exemplo pro tutorial, e não algo a ser seguido, até porque ele modifica todas as datas, não mantendo as datas antigas.&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;git rebase &lt;span class=&quot;nt&quot;&gt;--exec&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'git commit --amend --author=&quot;stephan-lopes &amp;lt;40838038+stephan-lopes@users.noreply.github.com&amp;gt;&quot; --no-edit -S -n'&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--root&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Com esse comando, ele irá modificar o autor do commit, e assinar ele. Talvez não seja a melhor forma de se fazer isso, para o seu caso. Estou apenas demonstrando que é possível fazer essa assinatura de commits anteriores.&lt;/p&gt;
+
+&lt;h2 id=&quot;_-bloquear-pushes-que-exponham-o-e-mail-público&quot;&gt;&amp;gt;_ Bloquear Pushes que exponham o e-mail público&lt;/h2&gt;
+
+&lt;p&gt;Pode acontecer de você acabar em algum momento, definindo seu e-mail, e acabar esquecendo de mudar para o e-mail no-reply. Para evitar que faça um push e exponha ele, existe uma configuração no GitHub, que permite impedir isso.&lt;/p&gt;
+
+&lt;p&gt;No seu perfil, acesse &lt;strong&gt;Settings&lt;/strong&gt;, posteriormente, acesse &lt;strong&gt;Emails&lt;/strong&gt;, e por fim, marque a caixa onde está escrito &lt;strong&gt;Block command line pushes that expose my email&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;Com isso, toda vez que você tentar enviar um push, expondo o seu endereço de e-mail público, será impedido.&lt;/p&gt;
+
+&lt;h2 id=&quot;_-modo-vigilante&quot;&gt;&amp;gt;_ Modo Vigilante&lt;/h2&gt;
+&lt;p&gt;É possível adicionar o Modo Vigilante. Isso faz com que todos os seus commits, tanto os atuais, como os anteriores, mostrem se você é realmente você. Se o Commit não for assinado, ou está assinado, mas a assinatura é completamente diferente, o commit é definido como &lt;strong&gt;Unverified&lt;/strong&gt;. Se o nome do Autor é diferente, mas o e-mail é igual, ele mostra &lt;strong&gt;Partially Verified&lt;/strong&gt;. Se ele estiver com e-mail e usuário iguais o da assinatura, ele mostra &lt;strong&gt;Verified&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;Para ativar o modo vigilante, no seu perfil, acesse &lt;strong&gt;Settings&lt;/strong&gt;, posteriormente, acesse &lt;strong&gt;SSH and GPG Keys&lt;/strong&gt;, e por fim, na seção de &lt;strong&gt;Vigilant Mode&lt;/strong&gt; marque a caixa onde está escrito &lt;strong&gt;Flag unsigned commits as unverified&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;h2 id=&quot;_-conclusão&quot;&gt;&amp;gt;_ Conclusão&lt;/h2&gt;
+&lt;p&gt;Neste tutorial/artigo, quis demonstrar um pouco mais sobre o problema de não assinar seus commits, mostrar como assinar commits, e como fazer um rebase para assinar commits antigos, caso opte por isso. Além disso, foi ensinado um pouco sobre geração de chave GPG, como configurar cache das chaves, e uma forma de não expor seu e-mail pessoal, mas sim um gerado pelo Github, para ter maior segurança em seus commits.&lt;/p&gt;
+
+&lt;p&gt;Também foi ensinado algumas formas de melhorar a identificação, utilizando o modo vigilante, e como impedir que seu endereço de e-mail seja exposto sem querer, em algum commit, quando usar o push. Espero que tenha gostado, e que esse artigo tenha sido útil. Caso você tenha ainda mais interesse em me ajudar, curta e compartilhe o artigo, além de interagir com sugestões, dúvidas, e comentários, na seção de comentários abaixo.&lt;/p&gt;
+
+&lt;div class=&quot;breaker&quot;&gt;&lt;/div&gt;</content><author><name>keven</name></author><category term="blog" /><category term="gpg" /><category term="git" /><category term="github" /><category term="guia-rapido" /><summary type="html">No Git, toda vez que é feito um commit, ele coleta seu usuário e seu e-mail, e anexa em um Commit. Entretanto, ele pode ser manipulado, e alguém pode se passar por você. Sendo assim, o ideal é assinar seus commits com chave GPG. Com ela, você consegue comprovar que você é você, para todos aqueles que possuem uma chave pública da chave privada que só você possuí. Este tutorial, é um guia de configuração, bem como a demonstração do problema em si, e em como resolvê-lo. Espero que gostem, e coloquem em prática as dicas!</summary></entry><entry><title type="html">Vagrant + Kaspersky: Download de Imagens Sem Perder a Segurança</title><link href="https://stephan-lopes.github.io/blog/vagrant-kaspersky-download-de-imagens-sem-perder-a-seguran%C3%A7a/" rel="alternate" type="text/html" title="Vagrant + Kaspersky: Download de Imagens Sem Perder a Segurança" /><published>2022-01-24T00:01:00+00:00</published><updated>2022-01-24T00:01:00+00:00</updated><id>https://stephan-lopes.github.io/blog/vagrant-kaspersky-download-de-imagens-sem-perder-a-seguran%C3%A7a</id><content type="html" xml:base="https://stephan-lopes.github.io/blog/vagrant-kaspersky-download-de-imagens-sem-perder-a-seguran%C3%A7a/">&lt;p&gt;&lt;em&gt;O funcionamento do Kaspersky em conjunto de Máquinas Virtuais, ou imagens, criadas através do Vagrant, é um pouco dificultoso. Isso ocorre por uma funcionalidade do Kaspersky que protege sua rede. Neste artigo, explico como contornar esse problema, sem precisar desativar temporariamente o antivírus, ou então, desativar essa função, que tem como foco proteger o usuário.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;_-o-problema&quot;&gt;&amp;gt;_ O Problema&lt;/h2&gt;
+
+&lt;p&gt;O problema ocorre quando tenta conseguir a imagem que não pode ser encontrada localmente no dispositivo onde deseja iniciar o Vagrant. Por exemplo, após executar um vagrant init centos/7 e executar um vagrant up, um erro é mostrado para o usuário:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://stephan-lopes.github.io/assets/images/vagrant-kaspersky-download-de-imagens-sem-perder-a-segurança/1642996839628.png&quot; alt=&quot;Imagem do Problema&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Esse tipo de erro impede o Vagrant de efetuar o download da imagem, através do Vagrant Cloud, e posteriormente, do Centos.&lt;/p&gt;
+
+&lt;h2 id=&quot;_-solução&quot;&gt;&amp;gt;_ Solução&lt;/h2&gt;
+
+&lt;p&gt;Para resolver o problema, precisamos entender como funciona essa funcionalidade do Antivírus.&lt;/p&gt;
+
+&lt;h3 id=&quot;-entendendo-o-funcionamento&quot;&gt;$ Entendendo o Funcionamento&lt;/h3&gt;
+
+&lt;p&gt;A Kaspersky Security bloqueia alguns sites de realizarem determinadas tarefas, verificando as conexões criptografadas. Isso é feito para garantir a segurança do usuário.&lt;/p&gt;
+
+&lt;p&gt;Isso não quer dizer que os sites tenham vulnerabilidade, ou não sejam seguros. Apenas é o motivo do porque a Kaspersky não permitir a conexão, da forma esperada, com esses servidores.&lt;/p&gt;
+
+&lt;h3 id=&quot;-resolvendo-o-problema&quot;&gt;$ Resolvendo o Problema&lt;/h3&gt;
+
+&lt;p&gt;Existem algumas formas de contornar o problema. Uma delas seria &lt;strong&gt;desativar o antivírus durante esse processo&lt;/strong&gt;. Dentre todas as alternativas neste artigo, essa é a pior delas. O motivo é simples: Deixa o seu computador ou dispositivo inseguro por um período de tempo. Nesse espaço de tempo, em que ele está inativo, o seu dispositivo pode ser comprometido.&lt;/p&gt;
+
+&lt;p&gt;A segunda forma, seria &lt;strong&gt;desativar esse tipo de verificação de conexões criptografadas&lt;/strong&gt;, o que seria uma outra forma que pode deixar seu dispositivo inseguro. Caso você acesse um site malicioso, poderá não ser impedido pelo antivírus. Ou se fizer uma conexão de criptografia que ele julgue, quando está ativo, como fraca ou insegura, sua comunicação pode estar correndo um risco de ser comprometida, e/ou interceptada.&lt;/p&gt;
+
+&lt;p&gt;A melhor forma, é apenas liberar para alguns domínios específicos, informando em uma lista, os endereços que devem ser ignorados nessa regra. Siga o passo abaixo:&lt;/p&gt;
+
+&lt;p&gt;Abra a tela do Kaspersky Security. Após isso, aperte no botão de engrenagem (configurações), e acesse a seção de gerenciamento de redes (Configurações de Rede). Após todos esses passos, busque entre as opões a seção de &lt;strong&gt;Verificação de Conexões Criptografadas&lt;/strong&gt;, e busque por um botão de &lt;strong&gt;Endereços Confiáveis&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://stephan-lopes.github.io/assets/images/vagrant-kaspersky-download-de-imagens-sem-perder-a-segurança/1643003270925.png&quot; alt=&quot;Imagem&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Adicione um novo endereço, informando posteriormente o nome de domínio do Vagrant Cloud (vagrantcloud.com), e deixe ele como ativo. Faça o mesmo procedimento com o domínio do Centos. Após concluir os passos, clique em Salvar.&lt;/p&gt;
+
+&lt;h2 id=&quot;_-conclusão&quot;&gt;&amp;gt;_ Conclusão&lt;/h2&gt;
+
+&lt;p&gt;Quando testar novamente o comando vagrant up, observará que tudo dará certo, sem reclamar de certificado, e, comparado com as outras opções, realizando todo o processo de uma forma mais segura. Caso deseje mais segurança, após o download da imagem você pode desativar os endereços dentro da lista de endereços confiáveis, sem excluir eles. Isso permite que você ative essa regra apenas quando precisar.&lt;/p&gt;
+
+&lt;div class=&quot;breaker&quot;&gt;&lt;/div&gt;</content><author><name>keven</name></author><category term="blog" /><category term="vagrant" /><category term="windows" /><category term="kaspersky" /><category term="virtualbox" /><category term="security" /><category term="guia-rapido" /><summary type="html">O funcionamento do Kaspersky em conjunto de Máquinas Virtuais, ou imagens, criadas através do Vagrant, é um pouco dificultoso. Isso ocorre por uma funcionalidade do Kaspersky que protege sua rede. Neste artigo, explico como contornar esse problema, sem precisar desativar temporariamente o antivírus, ou então, desativar essa função, que tem como foco proteger o usuário.</summary></entry><entry><title type="html">Guia Rápido: WSL + Virtualbox</title><link href="https://stephan-lopes.github.io/blog/guia-rapido-wsl-virtualbox/" rel="alternate" type="text/html" title="Guia Rápido: WSL + Virtualbox" /><published>2021-11-09T00:01:00+00:00</published><updated>2021-11-09T00:01:00+00:00</updated><id>https://stephan-lopes.github.io/blog/guia-rapido-wsl-virtualbox</id><content type="html" xml:base="https://stephan-lopes.github.io/blog/guia-rapido-wsl-virtualbox/">&lt;p&gt;&lt;em&gt;Recentemente o VirtualBox fez algumas atualizações, criando assim uma serie de problemas entre essas duas ferramentas (VirtualBox e WSL). Com isso, algumas pessoas foram obrigadas a escolher entre habilitar ou desabilitar o hipervisor, e escolher entre o WSL ou VirtualBox. Até a data dessa postagem, não há uma solução nas versões mais recentes, entretanto, é possível contorná-la.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;_-o-problema-com-o-virtualbox&quot;&gt;&amp;gt;_ O Problema com o VirtualBox&lt;/h2&gt;
+
+&lt;p&gt;O problema consiste em usar a versão mais atualizada do VirtualBox, em conjunto com o WSL (Subsistema do Linux no Windows). Quando tentava criar uma máquina com o VirtualBox, a seguinte mensagem aparecia na tela:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-raw&quot; data-lang=&quot;raw&quot;&gt;[...] NEMR0InitVMPart2 failed: VERR_NEM_INIT_FAILED (VERR_NEM_VM_CREATE_FAILED)&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Com isso a máquina não é iniciada. A sugestão que é dada na maioria dos fóruns, seria a desabilitar o hipervisor, que está habilitado, usando o seguinte comando, em um powershell:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-powershell&quot; data-lang=&quot;powershell&quot;&gt;&lt;span class=&quot;n&quot;&gt;bcdedit&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;/set&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;hypervisorlaunchtype&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;off&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Isso resolve o problema com o Virtualbox, mas criamos outro problema, agora com o WSL.&lt;/p&gt;
+
+&lt;h2 id=&quot;_-o-problema-com-o-wsl&quot;&gt;&amp;gt;_ O Problema com o WSL&lt;/h2&gt;
+
+&lt;p&gt;Após fazer o passo anterior, você deve reiniciar o computador. E quando ele inicia, você têm uma nova surpresa: seu WSL não funciona mais. E como faz para fazer funcionar novamente? Tem que habilitar o hipervisor. E nessa brincadeira, você fica tendo que escolher o que é mais importante, o WSL ou o Virtualbox, para seu ambiente de desenvolvimento.&lt;/p&gt;
+
+&lt;p&gt;Alguns outros fóruns irão recomendar em ativar recursos adicionais do Windows, que se você não sabe para que servem, sugiro não ativar, pois poderá causar outros problemas. Seria igual a se mexer tentando sair de uma areia movediça, você só se afunda mais. Em meus testes inclusive, nenhum deles funcionou com ambos ativos (WSL + Virtualbox).&lt;/p&gt;
+
+&lt;p&gt;Se fez o passo anterior e quer de volta o seu WSL, use o comando abaixo, e reinicie sua máquina:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-powershell&quot; data-lang=&quot;powershell&quot;&gt;&lt;span class=&quot;n&quot;&gt;bcdedit&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;/set&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;hypervisorlaunchtype&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;auto&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;h2 id=&quot;_-a-solução-contornando-os-problemas-com-downgrade&quot;&gt;&amp;gt;_ A Solução: Contornando os Problemas com Downgrade&lt;/h2&gt;
+
+&lt;p&gt;A solução que encontrei para contornar este problema é fazer o downgrade do Virtualbox para uma versão anterior que não estivesse com este bug. Com isso, fiz o downgrade para a versão 6.1.26 (atualmente estamos na 6.1.28), e reiniciei a máquina host. Após isso, ambos os dois, WSL e Virtualbox, voltaram a funcionar. Você pode instalar a mesma versão que instalei através deste &lt;a href=&quot;https://www.virtualbox.org/wiki/Download_Old_Builds_6_1&quot;&gt;link&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Ainda assim, é possível que encontre alguns problemas. Um deles pode ser derivado das suas antigas máquinas virtuais. Algumas delas podem não ser mais acessíveis. Se acontecer algum erro como esse, sugiro remover manualmente o diretório da máquina, que fica localizado por padrão em &lt;span class=&quot;evidence&quot;&gt;C:\&amp;lt;nome_do_usuario&amp;gt;\VirtualBox VMs\&lt;/span&gt;&lt;/p&gt;
+
+&lt;div class=&quot;breaker&quot;&gt;&lt;/div&gt;</content><author><name>keven</name></author><category term="blog" /><category term="wsl" /><category term="windows" /><category term="virtualbox" /><category term="guia-rapido" /><summary type="html">Recentemente o VirtualBox fez algumas atualizações, criando assim uma serie de problemas entre essas duas ferramentas (VirtualBox e WSL). Com isso, algumas pessoas foram obrigadas a escolher entre habilitar ou desabilitar o hipervisor, e escolher entre o WSL ou VirtualBox. Até a data dessa postagem, não há uma solução nas versões mais recentes, entretanto, é possível contorná-la.</summary></entry><entry><title type="html">Rsyslog #01: Configurando um Servidor de Log Básico</title><link href="https://stephan-lopes.github.io/blog/rsyslog-01-configurando-um-servidor-de-log-b%C3%A1sico/" rel="alternate" type="text/html" title="Rsyslog #01: Configurando um Servidor de Log Básico" /><published>2021-10-05T00:00:00+00:00</published><updated>2021-10-05T00:00:00+00:00</updated><id>https://stephan-lopes.github.io/blog/rsyslog-01-configurando-um-servidor-de-log-b%C3%A1sico</id><content type="html" xml:base="https://stephan-lopes.github.io/blog/rsyslog-01-configurando-um-servidor-de-log-b%C3%A1sico/">&lt;p&gt;&lt;em&gt;As mensagens em uma rede de computadores podem ser centralizadas em um único servidor. Quando centralizadas, fica mais fácil o gerenciamento, análise e solução de problemas relacionados as máquinas presentes nesta rede. O artigo a seguir, tem como objetivo ensinar a como configurar um servidor de log básico utilizando essa ferramenta, e introduzir ao leitor conceitos de Facilidade e Nível.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;_-o-que-é-um-servidor-de-log&quot;&gt;&amp;gt;_ O que é um servidor de Log?&lt;/h2&gt;
+
+&lt;p&gt;Basicamente, um servidor de log, seria uma máquina que centraliza todas as mensagens de algumas máquinas em uma rede, para que sejam armazenadas, e posteriormente, com outras ferramentas, analisadas. A necessidade de um servidor centralizado de Log, é essencial, quando temos mais de um (diria 2 ou mais) servidores. Além de manter os dados em um outro servidor, garantindo assim uma certa dificuldade de alterá-los caso haja um incidente de segurança da informação, ele também permite a centralização dos logs de diversos servidores, que poderão ser analisados em um único local.&lt;/p&gt;
+
+&lt;p&gt;Imagine você tendo que cuidar de mais de 500 servidores… Ficaria difícil, em algumas situações, identificar algum problema, sem um servidor de log centralizado, não é mesmo?&lt;/p&gt;
+
+&lt;h2 id=&quot;_-qual-servidor-de-log-devo-utilizar&quot;&gt;&amp;gt;_ Qual servidor de Log devo utilizar?&lt;/h2&gt;
+&lt;p&gt;Existem inúmeras alternativas no mercado, como por exemplo syslog-ng, rsyslog, logstash, e até mesmo, se formos pra nuvem, o CloudWatch da AWS, dentre outros. Neste artigo, meu foco será introduzi-lo ao Rsyslog. Entretanto, nada impede que você, leitor, utilize outra ferramenta. Apenas devo informar que, provavelmente, o artigo não servirá para a ferramenta escolhida, caso a ferramenta escolhida seja diferente.&lt;/p&gt;
+
+&lt;h2 id=&quot;_-considerações&quot;&gt;&amp;gt;_ Considerações&lt;/h2&gt;
+&lt;p&gt;Como forma de melhorar o entendimento, estarei disponibilizando um arquivo Vagrantfile no fim do artigo que possibilitará a criação de um ambiente de estudo. Os requisitos para o artigo, no entanto, serão apenas duas máquinas, sendo uma que servirá de &lt;strong&gt;Cliente&lt;/strong&gt; e outra como &lt;strong&gt;Servidor&lt;/strong&gt;. Utilizarei Centos/7 em ambas as duas, por familiaridade. Caso tenha uma familiaridade com outra distribuição Linux, fique a vontade de utilizá-la. Não serão utilizadas máquinas Windows.&lt;/p&gt;
+
+&lt;p&gt;Com essas considerações, vamos a mão na massa!&lt;/p&gt;
+
+&lt;h2 id=&quot;_-criando-o-ambiente-de-estudo&quot;&gt;&amp;gt;_ Criando o ambiente de estudo&lt;/h2&gt;
+&lt;p&gt;Caso tenha optado por utilizar o arquivo Vagrantfile, fornecido no artigo para criar seu ambiente de estudo, apenas execute o comando abaixo para criar o ambiente:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;vagrant up&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;O processo de criação demora um certo tempo, até que todas as máquinas sejam criadas. Após a criação, para acessar as máquinas, execute os comandos abaixo:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;vagrant ssh server &lt;span class=&quot;c&quot;&gt;# ---&amp;gt; Entra na máquina do servidor&lt;/span&gt;
+vagrant ssh client &lt;span class=&quot;c&quot;&gt;# ---&amp;gt; Entra na máquina do cliente&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;h2 id=&quot;_-instalando-o-rsyslog&quot;&gt;&amp;gt;_ Instalando o Rsyslog&lt;/h2&gt;
+&lt;p&gt;Por padrão, as máquinas Centos/7 já possuem o Rsyslog instalado. Entretanto, ele é de algumas versões anteriores do mesmo. Para ver a versão do Rsyslog na máquina &lt;strong&gt;Cliente&lt;/strong&gt; e &lt;strong&gt;Servidor&lt;/strong&gt;, utilize o comando abaixo:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;rsyslogd &lt;span class=&quot;nt&quot;&gt;-v&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://stephan-lopes.github.io/assets/images/rsyslog-01-configurando-um-servidor-de-log-básico/1628350418210.png&quot; alt=&quot;Imagem&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;A versão mais recente do Rsyslog, no momento que escrevo este artigo, é a 8.2106.0. Olhando no site do Rsyslog, notamos que a versão 8.24, é de outubro de 2017. Em um próximo artigo será introduzida a linguagem RainerScript, por isso é necessário que uma versão mais atualizada esteja presente, evitando assim, possíveis problemas de incompatibilidade com a linguagem.&lt;/p&gt;
+
+&lt;p&gt;Vamos então incluir o repositório oficial do Rsyslog, para conseguir um binário pré-compilado atualizado. Para isso, basta executar os seguintes comandos abaixo com o usuário &lt;strong&gt;root&lt;/strong&gt; em ambas as máquinas (&lt;strong&gt;Servidor&lt;/strong&gt; e &lt;strong&gt;Cliente&lt;/strong&gt;):&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;&lt;span class=&quot;nb&quot;&gt;cd&lt;/span&gt; /etc/yum.repos.d/
+wget http://rpms.adiscon.com/v8-stable/rsyslog.repo
+yum &lt;span class=&quot;nb&quot;&gt;install &lt;/span&gt;rsyslog &lt;span class=&quot;nt&quot;&gt;-y&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Após a execução dos comandos, teremos a versão mais atualizada do Rsyslog (versão estável)&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://stephan-lopes.github.io/assets/images/rsyslog-01-configurando-um-servidor-de-log-básico/1628352331901.png&quot; alt=&quot;Imagem&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;_-subindo-servidor-rsyslog-legado&quot;&gt;&amp;gt;_ Subindo servidor Rsyslog (legado)&lt;/h2&gt;
+&lt;p&gt;Com a versão mais recente do programa instalada, podemos agora criar o nosso &lt;strong&gt;Servidor&lt;/strong&gt;. É possível criar um &lt;strong&gt;Servidor&lt;/strong&gt; rsyslog de forma muito simples, entretanto, legada. Ela utiliza a forma anterior ao qual o Rsyslog trabalhava seus arquivos de configuração. O arquivo de configuração padrão do Rsyslog, é o arquivo presente em &lt;em&gt;/etc/rsyslog.conf&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;No diretório &lt;em&gt;/etc/rsyslog.d/&lt;/em&gt; ficam os arquivos que são importados pelo rsyslog. Nele que você pode configurar regras personalizadas. Uma boa prática, é criar seus &lt;em&gt;rulesets&lt;/em&gt; personalizados neste diretório, ao invés de criar no arquivo &lt;em&gt;rsyslog.conf&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;Vamos configurar primeiramente nosso &lt;strong&gt;Servidor&lt;/strong&gt;. Pra isso, iremos remover o comentário das seguintes linhas:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://stephan-lopes.github.io/assets/images/rsyslog-01-configurando-um-servidor-de-log-básico/1628385769857.png&quot; alt=&quot;Imagem&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Salve o arquivo, e execute o comando abaixo:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;systemctl restart rsyslogd&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Isso fará com que o Servidor seja reiniciado, e com isso, carregue o arquivo de configuração novamente. Dessa forma, ele saberá que deve escutar na porta 514 - como define a linha onde está presente $UDPServerRun 514 - e que deve ser pelo protocolo UDP.&lt;/p&gt;
+
+&lt;p&gt;Certo. Mas será que ele está funcionando? Será que está recebendo log? Bom, precisamos sabermos isso. Primeiramente, vamos verificar se o &lt;strong&gt;Servidor&lt;/strong&gt; está funcionando corretamente. Digite em seu terminal:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;systemctl status rsyslogd&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Está com status ativo? Está rodando? Ótimo. Já sabemos que o Servidor está sendo executado. Agora precisamos verificar se a porta no protocolo UDP está realmente aberta, executando o comando abaixo:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;netstat &lt;span class=&quot;nt&quot;&gt;-lnup&lt;/span&gt; | &lt;span class=&quot;nb&quot;&gt;grep &lt;/span&gt;514&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Apareceu algum resultado? Se apareceu um resultado, temos agora um &lt;strong&gt;Servidor&lt;/strong&gt; de Logs configurado.&lt;/p&gt;
+
+&lt;p&gt;Mas, calma aí… Não temos a certeza ainda que está funcionando. Isso porque o &lt;strong&gt;Servidor&lt;/strong&gt; ainda não está coletando arquivo de logs de outros lugares, apenas dele mesmo. Precisamos configurar agora a máquina &lt;strong&gt;Cliente&lt;/strong&gt;, para enviar logs para o servidor.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;PS:. Antes de deixarmos o &lt;strong&gt;Servidor&lt;/strong&gt; de lado por um momento, e configurarmos a máquina &lt;strong&gt;Cliente&lt;/strong&gt;, execute o comando abaixo, e anote o endereço IP da máquina &lt;strong&gt;Servidor&lt;/strong&gt;:&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://stephan-lopes.github.io/assets/images/rsyslog-01-configurando-um-servidor-de-log-básico/1628909014687.png&quot; alt=&quot;Imagem&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Mais tarde, enquanto estivermos configurando a máquina &lt;strong&gt;Cliente&lt;/strong&gt;, precisaremos especificar para onde estaremos enviando os logs, e iremos informar que será para este endereço IP.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;_-configurando-cliente-rsyslog-legado&quot;&gt;&amp;gt;_ Configurando cliente Rsyslog (Legado)&lt;/h2&gt;
+&lt;p&gt;Com o &lt;strong&gt;Servidor&lt;/strong&gt; já configurado, vamos então para a máquina &lt;strong&gt;Cliente&lt;/strong&gt;. Acesse ela em outra aba do terminal, e abra o arquivo de configuração em &lt;em&gt;/etc/rsyslog&lt;/em&gt;.conf. No fim do arquivo, adicione a seguinte linha de código:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;.&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt; @&amp;lt;ENDEREÇO_IP&amp;gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;PS:. Substitua o &lt;ENDEREÇO_IP&gt;, pelo endereço IP do Servidor ao qual você anotou no passo anterior.&lt;/ENDEREÇO_IP&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;_-testando-configuração-de-comunicação-cliente-servidor&quot;&gt;&amp;gt;_ Testando configuração de comunicação Cliente-Servidor&lt;/h2&gt;
+&lt;p&gt;Precisamos testar agora se o &lt;strong&gt;Cliente&lt;/strong&gt; está enviando os logs para o &lt;strong&gt;Servidor&lt;/strong&gt; centralizado. Salve o arquivo, e saia dele, caso ainda não tenha feito. O próximo passo é reiniciar o serviço rsyslog da máquina &lt;strong&gt;Cliente&lt;/strong&gt;, utilizando o mesmo comando que usamos anteriormente para reiniciar o serviço na máquina &lt;strong&gt;Servidor&lt;/strong&gt;:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;systemctl restart rsyslogd&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Reiniciou? Vamos verificar se o serviço está funcionando, executando o comando abaixo:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;systemctl status rsyslogd&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Está ativo? Se estiver, então a nova linha que adicionamos no arquivo de configuração do Rsyslog foi carregada pelo serviço. Os últimos passos, para verificar se o &lt;strong&gt;Servidor&lt;/strong&gt; está funcionando seriam: executar um comando para ler um dos arquivo de log, neste caso, o &lt;em&gt;/var/log/messages&lt;/em&gt;, e também, gerarmos um log de exemplo na máquina &lt;strong&gt;Cliente&lt;/strong&gt;, para verificar se está sendo enviado para o &lt;strong&gt;Servidor&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;Execute o comando abaixo no &lt;strong&gt;Servidor&lt;/strong&gt;:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;&lt;span class=&quot;nb&quot;&gt;tail&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-f&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-n1&lt;/span&gt; /etc/messages&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Esse comando está mostrando de forma iterativa no terminal, toda novidade que for registrada no arquivo /etc/messages, dentro do &lt;strong&gt;Servidor&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;Na máquina &lt;strong&gt;Cliente&lt;/strong&gt;, execute o comando abaixo:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;logger &lt;span class=&quot;nt&quot;&gt;-p&lt;/span&gt; info Mensagem de teste&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Com esse comando, enviamos um log de teste para o serviço do Rsyslog, que irá salvar em algum dos arquivos ao qual nele foi dito para salvar. No nosso caso, ele irá enviar também para a máquina &lt;strong&gt;Servidor&lt;/strong&gt;, como definimos adicionando aquela linha, no arquivo de configuração.&lt;/p&gt;
+
+&lt;p&gt;Volte agora para a máquina &lt;strong&gt;Servidor&lt;/strong&gt; e verifique se chegou alguma mensagem, como a mensagem abaixo. Se chegou, então a máquina &lt;strong&gt;Servidor&lt;/strong&gt; e a máquina &lt;strong&gt;Cliente&lt;/strong&gt; estão conseguindo se comunicar corretamente.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://stephan-lopes.github.io/assets/images/rsyslog-01-configurando-um-servidor-de-log-básico/1629071777012.png&quot; alt=&quot;Imagem&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;_-entendendo-configuração-da-máquina-cliente-e-servidor&quot;&gt;&amp;gt;_ Entendendo configuração da máquina Cliente e Servidor&lt;/h2&gt;
+
+&lt;h3 id=&quot;servidor&quot;&gt;Servidor&lt;/h3&gt;
+&lt;p&gt;Na máquina &lt;strong&gt;Servidor&lt;/strong&gt;, descometamos a linha que permitia com que fosse possível o recebimento de arquivos de log via rede. Nós abrimos a porta 514 do protocolo UDP, para que a velocidade de entrega do log fosse maior. Entretanto, com isso, podemos perder alguns logs, já que não existe o &lt;em&gt;three handshake&lt;/em&gt; presente no protocolo TCP. Aconselho utilizar o protocolo UDP apenas para quando você prioriza mais a velocidade de entrega, do que ter a garantia de recebimento da mensagem. Caso queira garantir a entrega da mensagem de log, use o TCP.&lt;/p&gt;
+
+&lt;p&gt;O TCP, apesar de garantir a entrega, acaba sendo mais lento. E no caso de queda do &lt;strong&gt;Servidor de logs&lt;/strong&gt;, ele vai tentar garantir o envio da mensagem ao destino mesmo assim. Então ele vai ficar tentando enviar a mensagem, e tentando, e tentando… e tentando…&lt;/p&gt;
+
+&lt;p&gt;É possível também utilizar certificados TLS, junto com o protocolo TCP, o que permite com que sua mensagem não seja lida por terceiros, caso seja interceptada antes de chegar no &lt;strong&gt;Servidor&lt;/strong&gt;. Entretanto, isso faz com que a velocidade acabe sendo mais prejudicada.&lt;/p&gt;
+
+&lt;p&gt;Uma alternativa para garantir a entrega da mensagem ao &lt;strong&gt;Servidor&lt;/strong&gt;, uma velocidade maior que o módulo do &lt;em&gt;imtcp&lt;/em&gt;, e também caso não necessite de um certificado TLS, é a utilização do módulo &lt;em&gt;imptcp&lt;/em&gt;. Ele é mais simples que o módulo &lt;em&gt;imtcp&lt;/em&gt;, mas não permite a criptografia por ele, tendo que ser realizada pelo software &lt;em&gt;stunnel&lt;/em&gt; caso necessite. Neste último caso, em específico, utilize o &lt;em&gt;imtcp&lt;/em&gt;.&lt;/p&gt;
+
+&lt;h3 id=&quot;cliente&quot;&gt;Cliente&lt;/h3&gt;
+
+&lt;p&gt;Na máquina &lt;strong&gt;Cliente&lt;/strong&gt;, definimos qual seria o protocolo utilizado colocando apenas um “@” na frente do endereço IP do &lt;strong&gt;Servidor&lt;/strong&gt; no arquivo de configuração. Isso definiu o protocolo de envio como UDP. Caso desejássemos utilizar o protocolo TCP, seriam dois “@” seguidos do endereço IP.&lt;/p&gt;
+
+&lt;p&gt;O &lt;em&gt;.&lt;/em&gt;, definiu a facilidade e nível do log, em cada “*”, respectivamente. Isso diz que todos os logs de todos os níveis e facilidades são enviados ao &lt;strong&gt;Servidor de log&lt;/strong&gt;. Poderíamos limitar que tipo de log seria enviado ao &lt;strong&gt;Servidor de log&lt;/strong&gt;, através da facilidade, fazendo o seguinte, por exemplo:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;kern.&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;  @&amp;lt;IP-DO-SERVIDOR&amp;gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Agora, apenas os logs do kernel serão enviados para o &lt;strong&gt;Servidor&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;Se quisermos, podemos também definir apenas um nível mais severo de log do kernel, para apenas logs de erros, ou mais críticos que isso, sejam enviados ao &lt;strong&gt;Servidor&lt;/strong&gt;:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;kern.err  @&amp;lt;IP-DO-SERVIDOR&amp;gt; &lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Agora, você receberá apenas logs de erro mais severos, como Error, Critical, Alert, e Emergency.&lt;/p&gt;
+
+&lt;h2 id=&quot;_-conclusão&quot;&gt;&amp;gt;_ Conclusão&lt;/h2&gt;
+&lt;p&gt;Esse primeiro artigo sobre o Rsyslog, mostrou de uma forma simples, como criar um servidor de log centralizado. Entretanto, há muita coisa que podemos melhorar. Nos próximos artigos, irei me aprofundar mais no seu funcionamento, tipos de módulos existentes, entre outras análises, que em um artigo só, fica difícil escrever.&lt;/p&gt;
+
+&lt;p&gt;Gostou do artigo, tem alguma dúvida ou possui alguma sugestão para os próximos? Por favor, comente! Feedbacks me auxiliam a melhorar o conteúdo por aqui.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;links&quot;&gt;Links&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;Vagrantfile: &lt;a href=&quot;https://gist.github.com/stephan-lopes/3213f88f44094ed8f25d5bfc328c9a5a&quot;&gt;GitHub&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;Rsyslog Facilities and Levels: &lt;a href=&quot;https://wiki.archlinux.org/title/rsyslog&quot;&gt;GitHub&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;breaker&quot;&gt;&lt;/div&gt;</content><author><name>keven</name></author><category term="blog" /><category term="rsyslog" /><category term="linux" /><category term="log" /><summary type="html">As mensagens em uma rede de computadores podem ser centralizadas em um único servidor. Quando centralizadas, fica mais fácil o gerenciamento, análise e solução de problemas relacionados as máquinas presentes nesta rede. O artigo a seguir, tem como objetivo ensinar a como configurar um servidor de log básico utilizando essa ferramenta, e introduzir ao leitor conceitos de Facilidade e Nível.</summary></entry><entry><title type="html">Camuflando Endereço IP em Testes de Segurança</title><link href="https://stephan-lopes.github.io/blog/camuflando-endere%C3%A7o-ip-em-testes-de-seguran%C3%A7a/" rel="alternate" type="text/html" title="Camuflando Endereço IP em Testes de Segurança" /><published>2020-05-18T00:01:00+00:00</published><updated>2020-05-18T00:01:00+00:00</updated><id>https://stephan-lopes.github.io/blog/camuflando-endere%C3%A7o-ip-em-testes-de-seguran%C3%A7a</id><content type="html" xml:base="https://stephan-lopes.github.io/blog/camuflando-endere%C3%A7o-ip-em-testes-de-seguran%C3%A7a/">&lt;h2 id=&quot;introdução&quot;&gt;Introdução&lt;/h2&gt;
+
+&lt;p&gt;Recentemente, estava procurando formas de camuflar o endereço IP, sem utilizar Whonix + Tor, ou Proxychains + Tor, que são dois métodos que podem ser utilizados para este objetivo. Estava vendo formas alternativas, devido a ambos os métodos, apesar de possuírem uma forma de camuflar o IP utilizando-se da rede Tor, acabam obrigando a fazer uma série de configurações (Whonix, por exemplo, precisa ser usado dentro de uma Maquina Virtual, e dependendo do uso, precisa ser configurado como Gateway), ou possuem algumas limitações (Proxychains, permite apenas abrir programas utilizando-se desse beneficio de utilizar o IP da rede Tor por padrão. E mesmo assim, ele acaba também limitando a funcionalidade de alguns programas).&lt;/p&gt;
+
+&lt;p&gt;Dessa forma, procurando, achei duas alternativas: uma não muito usual, utilizando VPNs do ProtonVPN, e outra mais fácil de se utilizar em testes de segurança, e também mais conhecida, utilizando a rede Tor para essa finalidade.&lt;/p&gt;
+
+&lt;p&gt;A seguir, estarei mostrando essas duas alternativas, assim como os testes realizados com ambas. Estarei disponibilizando no final do artigo, o endereço do repositório no GitHub, onde contêm o arquivo Vagrantfile, para caso queira realizar os testes em seu computador.&lt;/p&gt;
+
+&lt;h2 id=&quot;protonvpn&quot;&gt;ProtonVPN&lt;/h2&gt;
+
+&lt;p&gt;Uma das alternativa, é a utilização de uma VPN. Pode ser de qualquer provedor de VPN. Nesse artigo, me limito ao provedor ProtonVPN em sua versão gratuita, por conta da ferramenta que mostrarei logo em seguida. Lembrando que o artigo destina-se a testes de segurança autorizados (legalizados). Deixo bem claro isso, pois, utilizar esse método, gera rastro do seu IP real na VPN. Entretanto, a utilização da VPN, possibilita camuflar seu IP real em um ataque autorizado.&lt;/p&gt;
+
+&lt;h3 id=&quot;configuração-e-utilização&quot;&gt;Configuração e Utilização&lt;/h3&gt;
+
+&lt;p&gt;Para utilizar a alternativa acima, é necessário antes de tudo, que crie uma conta no site da ProtonVPN. Eles possuem alguns planos disponíveis, que vão de acordo com sua necessidade. Foi utilizada a versão gratuita para os testes.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://stephan-lopes.github.io/assets/images/camuflando-endereço-ip-em-testes-de-segurança/1589602859223.png&quot; alt=&quot;Imagem&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Após a criação e autenticação da conta, será necessário efetuar download do cliente para o sistema operacional em que deseja utilizá-lo. No caso desse artigo, foi utilizado o cliente para GNU/Linux, para distribuições Debian.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://stephan-lopes.github.io/assets/images/camuflando-endereço-ip-em-testes-de-segurança/1589648362557.png&quot; alt=&quot;Imagem&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Quando tiver terminado a instalação, é necessário efetuar configurações no cliente instalado. Para isso, digite no terminal:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;protonvpn init&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Com isso, você precisará entrar com as credenciais de acesso fornecidas na página de &lt;strong&gt;Conta&lt;/strong&gt;, na seção de &lt;strong&gt;Nome de Usuário OpenVPN / IKEv2&lt;/strong&gt;. Ele irá pedir para escolher um plano.&lt;/p&gt;
+
+&lt;p&gt;Como o cliente não me impediu de escolher, escolhi o plano Visionary, mesmo tendo o plano Free. Além disso, escolhi o protocolo UDP, entretanto, posteriormente durante os testes, mudei para TCP. Após isso, sua VPN já está configurada.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://stephan-lopes.github.io/assets/images/camuflando-endereço-ip-em-testes-de-segurança/1589649797942.png&quot; alt=&quot;Imagem&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Para conectar a VPN, basta digitar no terminal:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;protonvpn connect&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Então, serão dadas alguma opções, onde você poderá escolher a localidade, bem como, em qual servidor que deseja entrar.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://stephan-lopes.github.io/assets/images/camuflando-endereço-ip-em-testes-de-segurança/1589650323119.png&quot; alt=&quot;Imagem&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Fiz um teste, utilizando a ferramenta curl, onde verifiquei o meu endereço IP antes e depois de conectar na vpn. Criei um alias para ele em meu ~/.bashrc, chamado &lt;strong&gt;myip&lt;/strong&gt;. Durante o artigo, quando ver esse comando digitado no terminal, saiba que ele apenas executa o comando abaixo:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;curl http://ipecho.net/plain&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;A imagem abaixo, mostra que se conectou a VPN&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://stephan-lopes.github.io/assets/images/camuflando-endereço-ip-em-testes-de-segurança/1589651318732.png&quot; alt=&quot;Imagem&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;utilizando-em-testes-de-segurança-em-aplicações&quot;&gt;Utilizando em Testes de Segurança em Aplicações&lt;/h3&gt;
+
+&lt;p&gt;Com tudo configurado, modifiquei alguns parâmetros para testar sua funcionalidade em uma simulação de um ambientes real. Durante o &lt;em&gt;protonvpn connect&lt;/em&gt;, selecionei a opção de fazer a conexão via TCP ao invés de UDP. Não vou me atentar a explicar o motivo em detalhes, mas como foi simulado um ataque de tentativas de login em um servidor SSH, o método de conexão que precisava ser utilizado no ProtonVPN seria TCP.&lt;/p&gt;
+
+&lt;p&gt;Criei uma instância de VM no GCP, com uma imagem Ubuntu 16.04 LTS. Por padrão, a máquina já vem com algumas configurações do SSHGuard, que é quem vai escutar o arquivo de log, auth.log, e bloquear o endereço IP após algumas tentativas erradas de acesso. Como deixei a configuração por padrão, duas tentativas já são suficientes para bloquear o endereço IP no firewall.&lt;/p&gt;
+
+&lt;p&gt;O resultado do teste foi que, após duas tentativas erradas de acesso, ele bloqueou o endereço IP e na terceira tentativa, recebeu timeout. Isso aconteceu, por uma regra ter sido adicionada no Firewall pelo SSHGuard. Em outras palavras, ele não muda automaticamente o seu endereço IP, em casos de bloqueio pelo host, tendo que fazê-lo manualmente.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://stephan-lopes.github.io/assets/images/camuflando-endereço-ip-em-testes-de-segurança/1589656445456.png&quot; alt=&quot;Imagem&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Para mudar seu endereço IP manualmente, e randomicamente, sem ter que selecionar na lista, como feito anteriormente, basta executar o comando abaixo:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;protonvpn connect &lt;span class=&quot;nt&quot;&gt;-r&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-p&lt;/span&gt; tcp&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Fazendo isso, você terá um novo endereço IP, ao qual poderá continuar com seus testes de segurança, sem ter que expor seu endereço de IP real.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://stephan-lopes.github.io/assets/images/camuflando-endereço-ip-em-testes-de-segurança/1589657377377.png&quot; alt=&quot;Imagem&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;gerando-novo-endereço-ip-a-cada-10-segundos&quot;&gt;Gerando novo endereço IP a cada 10 segundos&lt;/h3&gt;
+
+&lt;p&gt;Talvez você se pergunte: “E se eu quiser automatizar essa mudança, e ficar, constantemente, mudando o endereço IP? Como eu poderia fazer isso?”. Existe uma ferramenta chamada IPChange. Ela faz isso de forma automatizada, utilizando ProtonVPN, tendo que apenas especificar o tempo que deseja que seja renovado o endereço IP. O repositório do GitHub para ela, encontra-se no final do artigo.&lt;/p&gt;
+
+&lt;p&gt;Não vou entrar em detalhes em como a ferramenta funciona, nem em seu uso. Estarei mostrando a seguir como fazer isso sem essa ferramenta, e deixando como um processo em segundo plano.&lt;/p&gt;
+
+&lt;p&gt;O comando abaixo, faz isso de forma automatizada, tendo apenas que mudar o tempo (em segundos) após o comando sleep. Isso se quiser alterar o tempo entre as mudanças de endereço IP:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;&lt;span class=&quot;k&quot;&gt;while&lt;/span&gt; :&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;protonvpn connect &lt;span class=&quot;nt&quot;&gt;-r&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-p&lt;/span&gt; tcp&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;sleep &lt;/span&gt;10&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;done&lt;/span&gt; &amp;amp;&amp;gt;/dev/null &amp;amp; &lt;span class=&quot;nb&quot;&gt;alias &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;killchange&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;kill -9 &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$!&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Caso queira parar o processo, basta digital killchange:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;killchange&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Porém, temos um problema. O processo de buscar um novo endereço de IP na ProtonVPN, acontece da seguinte forma: Você está utilizando o endereço IP “X” da VPN, e solicita para mudar de endereço IP. Então, o cliente do ProtonVPN desconecta você, fazendo-o voltar ao seu IP real. Logo em seguida, ele tenta se conectar a outra localidade. E quando conectado, lhe entrega para uso, o endereço IP “Y”.&lt;/p&gt;
+
+&lt;p&gt;Talvez se pergunte: “Qual o problema do que foi descrito acima?”. O problema consiste em que, você fica um período de tempo, mesmo que muito curto, com seu endereço IP real. Em um teste de segurança, por exemplo, isso pode acabar gerando logs com seu endereço IP real, fazendo o uso da ferramenta, desnecessário, caso não queira que isso aconteça. O tempo em que você volta para o seu IP real até se conectar novamente na VPN, consiste no seguinte cálculo:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;h4 id=&quot;tempo-com-endereço-ip-real--tempo-de-desconexão--tempo-de-conexão&quot;&gt;&lt;em&gt;(Tempo com endereço IP real) = (Tempo de Desconexão) + (Tempo de Conexão).&lt;/em&gt;&lt;/h4&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Executei no terminal, um comando, para que continuamente, verificasse o endereço IP. Quando ele “travava”, eu sabia que era por conta de o comando myip ter sido executado na troca de IP. Por isso, eu acabei parando e executando-o novamente. Na imagem abaixo, mostro isso e, descrevo qual é o endereço IP da VPN e qual é o endereço IP real.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://stephan-lopes.github.io/assets/images/camuflando-endereço-ip-em-testes-de-segurança/1589662844516.png&quot; alt=&quot;Imagem&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Sendo assim, é necessária uma boa conexão, e se atentar para esse problema sabendo que ele pode acontecer. Colocar um tempo maior no comando &lt;em&gt;sleep&lt;/em&gt;, e utilizar o endereço IP com menos frequência durante um ataque, são algumas alternativas que podem ajudar a contornar esse problema.&lt;/p&gt;
+
+&lt;h2 id=&quot;anonsurf&quot;&gt;AnonSurf&lt;/h2&gt;
+
+&lt;p&gt;A outra alternativa, seria o AnonSurf. Essa alternativa é popular, por conta de seu uso em distribuições como Kali Linux e Parrot OS. Você pode ver mais sobre o uso da ferramenta e suas outras formas de configuração, no repositório, que estará também no final do artigo.&lt;/p&gt;
+
+&lt;h3 id=&quot;configuração-e-utilização-1&quot;&gt;Configuração e Utilização&lt;/h3&gt;
+
+&lt;p&gt;Para configurar, é bem simples: basta clonar o repositório, entrar dentro do diretório e executar o script chamado installer.sh, que irá realizar todo o processo de instalação para você.&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;git clone https://github.com/Und3rf10w/kali-anonsurf &lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;cd &lt;/span&gt;kali-anonsurf &lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;sudo&lt;/span&gt; ./installer.sh&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Pronto, o AnonSurf já está instalado! Caso deseja verificar se foi instalado corretamente, digite no terminal:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;anonsurf&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Caso apresente algumas informações, como na imagem abaixo, ele foi instalado corretamente.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://stephan-lopes.github.io/assets/images/camuflando-endereço-ip-em-testes-de-segurança/1589664813662.png&quot; alt=&quot;Imagem&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Para iniciar o serviço, digite:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;anonsurf start&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Após isso, acontecerá a conexão:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://stephan-lopes.github.io/assets/images/camuflando-endereço-ip-em-testes-de-segurança/1589665078436.png&quot; alt=&quot;Imagem&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;utilizando-em-testes-de-segurança-em-aplicações-1&quot;&gt;Utilizando em Testes de Segurança em Aplicações&lt;/h3&gt;
+
+&lt;p&gt;Após iniciado e em execução, realizei o mesmo teste que fiz com o ProtonVPN. Em outra máquina do GCP, fiz autenticações inválidas na porta 22 (SSH), na expectativa de que também fizesse o bloqueio do endereço IP. Entretanto, me surpreendi. Após algumas tentativas, notei que quando o endereço IP era bloqueado, o AnonSurf, de alguma forma, “reconhecia” esse fato, e alterava o endereço IP automaticamente.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://stephan-lopes.github.io/assets/images/camuflando-endereço-ip-em-testes-de-segurança/1589763982157.png&quot; alt=&quot;Imagem&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Dessa forma, não é necessário ficar alterando o endereço IP manualmente durante um ataque, mesmo sendo possível fazer isso. Como reduzi o escopo dos testes, em um ataque de autenticação de em um servidor SSH, é dificil dizer que terá o mesmo resultado em outros tipos de ataque.&lt;/p&gt;
+
+&lt;p&gt;Caso deseje mudar manualmente o endereço IP, basta digitar o seguinte comando:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;anonsurf change&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Dessa forma, você terá um novo endereço IP, ao qual poderá utilizar em seus testes.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://stephan-lopes.github.io/assets/images/camuflando-endereço-ip-em-testes-de-segurança/1589764477776.png&quot; alt=&quot;Imagem&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;gerando-novo-endereço-ip-a-cada-10-segundos-1&quot;&gt;Gerando novo endereço IP a cada 10 segundos&lt;/h3&gt;
+
+&lt;p&gt;Diferente do ProtonVPN, desconheço de algum script, que faça isso para você, como o IPChange faz para o ProtonVPN. Entretanto, o mesmo código (com algumas alterações), utilizado no artigo para o ProtonVPN pode ser usado para o AnonSurf.&lt;/p&gt;
+
+&lt;p&gt;O comando abaixo funciona de forma semelhante de como funcionava com o ProtonVPN:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;&lt;span class=&quot;k&quot;&gt;while&lt;/span&gt; :&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;do &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;anonsurf change&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;sleep &lt;/span&gt;10&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;done&lt;/span&gt; &amp;amp;&amp;gt;/dev/null &amp;amp; &lt;span class=&quot;nb&quot;&gt;alias &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;killchange&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;kill -9 &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$!&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Caso queira parar o processo, basta digitar &lt;em&gt;killchange&lt;/em&gt;:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;killchange&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Em meus testes, verifiquei que mesmo com o serviço ligado, não acontecia a mudança tão demorada de IP, como acontece no ProtonVPN. O tempo da desconexão e de conexão é tão rápido, que não consegui notar se o tempo que ficava com o endereço IP real, era o suficiente pra gerar log, ou se então, nem sequer desconectava, mas sim, apenas mudava o endereço IP.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://stephan-lopes.github.io/assets/images/camuflando-endereço-ip-em-testes-de-segurança/1589765488796.png&quot; alt=&quot;Imagem&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Isso acaba auxiliando nos testes, em comparação com ProtonVPN, devido que, o mesmo acaba não gerando log com o endereço de IP real durante um ataque. Como a mudança de endereço IP é muito rápida, e não gerando log com seu endereço de IP real, é possível mudar o tempo colocando ele para um tempo abaixo dos 10 segundos.&lt;/p&gt;
+
+&lt;p&gt;Entretanto, uma coisa que notei durante os testes, foi que durante algumas tentativas de acesso ao servidor SSH o endereço IP que constava no arquivo de log no servidor, não condizia com o endereço IP que listava na minha máquina. Após o bloqueio do primeiro endereço IP pelo servidor, e a mudança automática do mesmo pelo AnonSurf, ele volta a condizer com o endereço IP da máquina nas próximas tentativas de autenticação.&lt;/p&gt;
+
+&lt;p&gt;Talvez não seja algo a se preocupar, mas fica uma pergunta no ar: “Se o endereço IP não condiz com o que está sendo utilizado na minha máquina, e eu sei que aquela tentativa de login que consta no log do servidor é minha, como pode essa tentativa chegar no servidor com outro endereço IP?”.&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusão&quot;&gt;Conclusão&lt;/h2&gt;
+
+&lt;p&gt;Neste artigo, tive como finalidade mostrar essas duas ferramentas. Elas são alternativas ao Proxychains e Whonix, pra esconder o seu endereço IP real. Não quis me atentar em apenas descrever sobre elas, e dizer suas funcionalidades, mas sim em fazer uma análise dessas duas ferramentas, e em demonstrar tanto o lado positivo, como negativo de ambas, encontrados nos testes.&lt;/p&gt;
+
+&lt;p&gt;Ambas as ferramentas conseguem auxiliar um profissional de Segurança da Informação em testes de segurança. Elas conseguem esconder o endereço IP real, o que pode ajudar não ser idêntificado em diversos tipos de ataque. Entretanto, cabe ao profissional escolher qual delas cabe melhor ao uso em seus testes de segurança, podendo o mesmo utilizar de outras possibilidades não descritas no artigo.&lt;/p&gt;
+
+&lt;p&gt;Como limitei o escopo do artigo, muita coisa não foi falada sobre IPChange, sobre funcionalidades do ProtonVPN, e também outros usos do AnonSurf, como por exemplo iniciá-lo junto ao sistema.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;repositórios&quot;&gt;Repositórios&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;Vagrantfile: &lt;a href=&quot;https://github.com/TheSubmitEquals/protonvpn-anonsurf-test&quot;&gt;GitHub&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;AnonSurf: &lt;a href=&quot;https://github.com/Und3rf10w/kali-anonsurf&quot;&gt;GitHub&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;IPChange: &lt;a href=&quot;https://github.com/tuhin1729/IPChange&quot;&gt;GitHub&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;breaker&quot;&gt;&lt;/div&gt;</content><author><name>keven</name></author><category term="blog" /><category term="anonsurf" /><category term="protonvpn" /><category term="security" /><summary type="html">Introdução</summary></entry><entry><title type="html">ElliotBot</title><link href="https://stephan-lopes.github.io/blog/elliotbot/" rel="alternate" type="text/html" title="ElliotBot" /><published>2019-03-25T02:07:00+00:00</published><updated>2019-03-25T02:07:00+00:00</updated><id>https://stephan-lopes.github.io/blog/elliotbot</id><content type="html" xml:base="https://stephan-lopes.github.io/blog/elliotbot/">&lt;p&gt;Este é um projeto destinado para o gerenciamento de mensagens e uso administrativo do grupo no Telegram, &lt;a href=&quot;https://guiaanonima.com&quot;&gt;Guia Anônima&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Para ter acesso ao repositório do projeto, acesse o link do &lt;a href=&quot;https://github.com/TheMrKeven/ElliotBot&quot;&gt;GitHub&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h2 id=&quot;requisitos&quot;&gt;Requisitos&lt;/h2&gt;
+&lt;p&gt;Caso deseje utilizar este Telegram Bot, ou executá-lo, precisará dos seguintes pacotes, presentes no &lt;strong&gt;requeriments.txt&lt;/strong&gt;:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;certifi==2019.3.9&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;chardet==3.0.4&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;idna==2.8&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;pyTelegramBotAPI==3.6.6&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;python-dotenv==0.10.1&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;requests==2.21.0&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;six==1.12.0&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;urllib3==1.24.1&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Para instalar todos, de uma única vez, utilize o comando abaixo:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span class=&quot;n&quot;&gt;pip&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;install&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pyTelegramBotAPI&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;python&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;dotenv&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Ou utilizando o arquivo &lt;strong&gt;requeriments.txt&lt;/strong&gt;:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span class=&quot;n&quot;&gt;pip&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;install&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;r&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;requeriments&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;txt&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;h2 id=&quot;instalação&quot;&gt;Instalação&lt;/h2&gt;
+&lt;p&gt;O processo de instalação é simples. Basta fazer um &lt;strong&gt;git clone&lt;/strong&gt; do repositório.&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;git clone https://github.com/TheMrKeven/ElliotBot.git&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Entretanto, mesmo após instalado, necessita de alguns ajustes.&lt;/p&gt;
+
+&lt;h2 id=&quot;configuração&quot;&gt;Configuração&lt;/h2&gt;
+&lt;p&gt;O processo de configuração também é simples, mas exige certa atenção, para que tudo funcione corretamente. 
+Uma configuração errada, acarretará em certos problemas na execução do código. É aconselhável a utilização de um ambiente virtual, entretanto, se deseja utilizá-lo sem um, 
+tenha certeza de que o python utilizado, é &lt;strong&gt;Python &amp;gt;= 3.6&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;Para ver a versão do Python, utilize seguinte comando no terminal:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;python &lt;span class=&quot;nt&quot;&gt;--version&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;No arquivo &lt;strong&gt;.env&lt;/strong&gt;, &lt;strong&gt;settings.py&lt;/strong&gt; e &lt;strong&gt;messages.py&lt;/strong&gt;, presentes 
+no diretório &lt;strong&gt;ElliotBot/src/config&lt;/strong&gt;, possuem algumas configurações a serem feitas.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;messages.py&lt;/strong&gt;: Ficam localizadas as mensagens do bot. Caso deseje alterar 
+alguma mensagem, pode ser feito neste arquivo.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;.env&lt;/strong&gt;: Devem estar presentes nesse arquivo, o Token e o Link do Bot.
+O link, é utilizado no Inline Keyboard, para direciona-lo ao chat Privado, ao apertar em &lt;strong&gt;Regras&lt;/strong&gt;. 
+O Token, deve ser obtido com o &lt;strong&gt;BotFather&lt;/strong&gt;.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;settings.py&lt;/strong&gt;: Todas as modificações, devem ser passadas a constantes deste arquivo,
+por ele ser importado pelo &lt;strong&gt;core.py&lt;/strong&gt;.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;executando&quot;&gt;Executando&lt;/h2&gt;
+
+&lt;p&gt;Após ter configurado e instalado os requisitos, utilize o comando&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;python bot.py&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;h2 id=&quot;exemplos-de-comandos&quot;&gt;Exemplos de Comandos&lt;/h2&gt;
+
+&lt;p&gt;Aqui estarão listados alguns comandos já presentes no Bot, caso deseje adicionar um comando ao projeto, leia a seção &lt;a href=&quot;https://github.com/TheMrKeven/ElliotBot#como-contribuir&quot;&gt;Como Contribuir&lt;/a&gt;.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;/start&lt;/strong&gt;: &lt;em&gt;Mostra as regras do grupo.&lt;/em&gt; (&lt;strong&gt;Privado somente&lt;/strong&gt;)&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;/rules&lt;/strong&gt;: &lt;em&gt;Mostra as regras do grupo. (&lt;strong&gt;Privado, e no Grupo&lt;/strong&gt;) (&lt;strong&gt;Grupo, Somente Admins&lt;/strong&gt;)&lt;/em&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;/ban&lt;/strong&gt;: &lt;em&gt;Aplica banimento em membro do grupo (&lt;strong&gt;Somente por Reply&lt;/strong&gt;) (&lt;strong&gt;Somente Admins&lt;/strong&gt;)&lt;/em&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;/canal&lt;/strong&gt;: &lt;em&gt;Mostra Link do Canal do Youtube &lt;strong&gt;Guia Anônima&lt;/strong&gt;&lt;/em&gt; (&lt;strong&gt;Privado, e no Grupo&lt;/strong&gt;) (&lt;strong&gt;Todos&lt;/strong&gt;)&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;/curso&lt;/strong&gt;: &lt;em&gt;Mostra Cursos do Instrutor @AdSEBR (&lt;strong&gt;Privado, e no Grupo&lt;/strong&gt;) (&lt;strong&gt;Todos&lt;/strong&gt;)&lt;/em&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;/ctf&lt;/strong&gt;: &lt;em&gt;Mostra mensagem do CTF (&lt;strong&gt;Privado, e no Grupo&lt;/strong&gt;) (&lt;strong&gt;Todos&lt;/strong&gt;)&lt;/em&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;breaker&quot;&gt;&lt;/div&gt;</content><author><name>keven</name></author><category term="project" /><category term="bot" /><category term="telegram" /><category term="Guia Anônima" /><summary type="html">Este é um projeto destinado para o gerenciamento de mensagens e uso administrativo do grupo no Telegram, Guia Anônima</summary></entry></feed>
